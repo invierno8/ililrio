@@ -169,9 +169,14 @@
 .dev-toolbar-icon-btn:hover { color: var(--jynx); background: var(--panel-raised); }
 .dev-toolbar-icon-btn.active { color: var(--jynx); border-color: var(--jynx); background: color-mix(in srgb, var(--jynx) 14%, transparent); }
 
+/* ב-commando הרמז הזה הוא טקסט חשוף, ושם זה עובד כי האפליקציה עצמה כהה.
+   RIO לבנה, ולכן הוא מקבל כאן גלולה כהה משלו — אחרת הוא נקרא כטקסט אפור
+   דהוי שיושב על תוכן האתר. */
 .jynx-hotkey-hint {
   display: flex; flex-direction: column; align-items: flex-end; gap: 3px; position: relative;
   font-family: var(--font-sans); max-width: 240px; text-align: end;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; padding: 5px 10px; box-shadow: var(--shadow-sm);
 }
 .jynx-hotkey-hint-text { font-size: 10.5px; color: var(--text-dim); }
 .jynx-hotkey-current {
