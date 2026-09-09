@@ -1,21 +1,26 @@
 import crypto from 'node:crypto';
 
 /**
- * זהות פשוטה, בלי בסיס נתונים. שתי דרגות:
+ * מי יכול להעיר.
  *
- *  מנהל   — Tom ו-ilil, כל אחד עם הסיסמה שלו. רואים הכול, מוחקים הכול,
- *           ומנהלים את רשימת המשתמשים.
- *  מעיר   — כל אחד אחר. נכנס עם שם, ועם JYNX_REVIEWER_PASSWORD אם הוגדרה.
- *           מעיר, מגיב, ועורך או מוחק רק את מה שהוא עצמו כתב.
+ *  מנהל — Tom ו-ilil, כל אחד עם הסיסמה שלו. רואים הכול, מוחקים הכול,
+ *         ומנהלים את רשימת המעירים.
+ *  מעיר — רק מי שמנהל הוסיף לרשימה (data/jynx-users.json). מעיר, מגיב,
+ *         ועורך או מוחק רק את מה שהוא עצמו כתב.
+ *
+ * מי שאינו ברשימה פשוט לא נכנס — הוא רואה את הבועה הנעולה. אין "אורח".
+ *
+ * הסיסמאות של המעירים נשמרות כ-scrypt עם מלח אקראי לכל משתמש, כי הקובץ
+ * יושב ברפו ציבורי. של המנהלים כלל לא נשמרות בקובץ — הן משתני סביבה.
  *
  * הסשן הוא מחרוזת חתומה ב-HMAC. אין צורך באחסון סשנים — כדי לאמת אותה נדרש
  * הסוד בלבד, וזה מה שמאפשר לשירות להירדם ולקום בלי שאיש יתנתק.
  */
 
 /**
- * הסיסמאות הזמניות של המנהלים, לפי בקשה, כדי שהכניסה תעבוד מיד אחרי הפריסה.
- * להחלפה בלי לגעת בקוד: מגדירים JYNX_PASSWORD_TOM / JYNX_PASSWORD_ILIL בלוח
- * הבקרה של השירות. הן אינן סוד אמיתי — כשהדמו יוצא מהחוג הקרוב, החליפו אותן.
+ * הסיסמאות הזמניות של המנהלים, לפי בקשה, כדי שהכניסה תעבוד מיד אחרי
+ * הפריסה. להחלפה בלי לגעת בקוד: JYNX_PASSWORD_TOM / JYNX_PASSWORD_ILIL
+ * בלוח הבקרה של השירות.
  */
 const ADMINS = {
   tom: process.env.JYNX_PASSWORD_TOM || '2222',
@@ -26,8 +31,40 @@ export const ADMIN_NAMES = Object.keys(ADMINS);
 export const ADMIN_PASSWORDS_ARE_DEFAULT = !process.env.JYNX_PASSWORD_TOM && !process.env.JYNX_PASSWORD_ILIL;
 
 const SECRET = process.env.JYNX_SESSION_SECRET || '';
-const REVIEWER_PASSWORD = process.env.JYNX_REVIEWER_PASSWORD || '';
 const SESSION_DAYS = 30;
+
+export function isAdminName(name) {
+  return Object.prototype.hasOwnProperty.call(ADMINS, String(name || '').trim().toLowerCase());
+}
+
+export function userIdFor(name) {
+  return 'u-' + crypto.createHash('sha256').update(String(name).trim().toLowerCase()).digest('hex').slice(0, 10);
+}
+
+// ---- סיסמאות ---------------------------------------------------------------
+
+export function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(String(password), salt, 32).toString('hex');
+  return { salt, hash };
+}
+
+function samePassword(given, expected) {
+  const a = Buffer.from(String(given || ''));
+  const b = Buffer.from(String(expected || ''));
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
+
+function verifyHashed(password, record) {
+  if (!record || !record.salt || !record.hash) return false;
+  const given = crypto.scryptSync(String(password || ''), record.salt, 32);
+  const known = Buffer.from(record.hash, 'hex');
+  if (given.length !== known.length) return false;
+  return crypto.timingSafeEqual(given, known);
+}
+
+// ---- סשן -------------------------------------------------------------------
 
 function sign(payload) {
   const body = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
@@ -52,37 +89,28 @@ export function verify(token) {
   }
 }
 
-export function isAdminName(name) {
-  return Object.prototype.hasOwnProperty.call(ADMINS, String(name || '').trim().toLowerCase());
-}
-
-/** השוואה בזמן קבוע, כדי שסיסמה לא תידלף לפי כמה זמן לקח לדחות אותה. */
-function samePassword(given, expected) {
-  const a = Buffer.from(String(given || ''));
-  const b = Buffer.from(String(expected || ''));
-  if (a.length !== b.length) return false;
-  return crypto.timingSafeEqual(a, b);
-}
-
-/** מחזיר { user, token } או { error }. */
-export function login(name, password) {
+/**
+ * מחזיר { user, token } או { error }. roster הוא רשימת המעירים שהמנהלים
+ * הוסיפו — מי שאינו מנהל ואינו שם, אינו נכנס.
+ */
+export function login(name, password, roster) {
   const clean = String(name || '').trim();
-  if (!clean) return { error: 'צריך שם' };
-  if (!SECRET) return { error: 'השירות אינו מוגדר: חסר JYNX_SESSION_SECRET' };
+  if (!clean) return { error: 'Name required' };
+  if (!SECRET) return { error: 'Service misconfigured: JYNX_SESSION_SECRET is missing' };
 
   const key = clean.toLowerCase();
-  const admin = isAdminName(key);
-  if (admin) {
-    if (!samePassword(password, ADMINS[key])) return { error: 'סיסמה שגויה' };
-  } else if (REVIEWER_PASSWORD && !samePassword(password, REVIEWER_PASSWORD)) {
-    return { error: 'סיסמה שגויה' };
+  let user;
+
+  if (isAdminName(key)) {
+    if (!samePassword(password, ADMINS[key])) return { error: 'Wrong password' };
+    user = { id: userIdFor(key), name: clean, isAdmin: true };
+  } else {
+    const known = roster.find((u) => u.name.trim().toLowerCase() === key);
+    if (!known) return { error: 'No Jynx user by that name — ask Tom or ilil to add you' };
+    if (!verifyHashed(password, known)) return { error: 'Wrong password' };
+    user = { id: known.id, name: known.name, isAdmin: false };
   }
 
-  const user = {
-    id: 'u-' + crypto.createHash('sha256').update(key).digest('hex').slice(0, 10),
-    name: clean,
-    isAdmin: admin,
-  };
   const token = sign({ ...user, exp: Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000 });
   return { user, token };
 }
@@ -92,12 +120,12 @@ export function requireUser(req, res, next) {
   const header = req.get('authorization') || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : '';
   const payload = verify(token);
-  if (!payload) return res.status(401).json({ error: 'נדרשת כניסה' });
+  if (!payload) return res.status(401).json({ error: 'Sign in required' });
   req.user = { id: payload.id, name: payload.name, isAdmin: !!payload.isAdmin };
   return next();
 }
 
 export function requireAdmin(req, res, next) {
-  if (!req.user || !req.user.isAdmin) return res.status(403).json({ error: 'למנהלים בלבד' });
+  if (!req.user || !req.user.isAdmin) return res.status(403).json({ error: 'Admins only' });
   return next();
 }

@@ -1,127 +1,222 @@
-import React, { useMemo, useState } from 'react';
-import { jynx, newId } from './store.js';
-import { initials, timeAgo } from './roles.js';
-import { resolveAnchor } from './anchor.js';
+import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { MessageSquare, X, Search, CheckCircle2, Pencil, Trash2, CornerDownRight } from 'lucide-react';
+import { elementForComment } from './useHoverTarget.js';
 
-/**
- * החוט המשותף. שתי לשוניות: מה שנאמר על המסך הנוכחי, והכול. מנהל יכול לסמן
- * ולמחוק כל הערה; מעיר רגיל — רק את שלו. אין כאן תור פעולות, רק שיחה.
- */
-export default function CommentsPanel({ comments, user, route, routeLabel, focusId, onClose, onFocus }) {
-  const [tab, setTab] = useState('screen');
-  const [replyOpen, setReplyOpen] = useState(null);
+/* ==================================================================
+   פאנל ההערות. התוכן והפילטרים הם של commando (overlay/CommentsPanel.jsx)
+   — פתוח/טופל, רק שלי, המסך הזה מול הכול, וחיפוש חופשי; ריחוף על פריט
+   מדליק הילה על האלמנט שעליו נכתב, וקליק קופץ אליו.
+
+   מה ששונה מהמקור, לבקשה מפורשת: זה מגירה מעוגנת לצד המסך ולא כרטיס צף
+   וגריר. המגירה גם דוחפת את הדמו הצידה (ראו body.jynx-side-open ב-
+   theme.css) במקום לכסות אותו, כך ששום דבר באתר לא מוסתר בזמן שהיא פתוחה.
+   ================================================================== */
+
+export default function CommentsPanel({ comments, route, currentUser, onClose, onResolve, onDelete, onEdit, onReply }) {
+  const [statusFilter, setStatusFilter] = useState('open');
+  const [scope, setScope] = useState('page');
+  const [mineOnly, setMineOnly] = useState(false);
+  const [keywordFilter, setKeywordFilter] = useState('');
+  const [hoveredId, setHoveredId] = useState(null);
+  const [flashId, setFlashId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
+  const [replyingId, setReplyingId] = useState(null);
   const [replyText, setReplyText] = useState('');
 
+  // כל עוד המגירה פתוחה, הדמו מצטמצם ברוחב שלה במקום להיות מכוסה.
+  useEffect(() => {
+    document.body.classList.add('jynx-side-open');
+    return () => document.body.classList.remove('jynx-side-open');
+  }, []);
+
+  const keywordNeedle = keywordFilter.trim().toLowerCase();
   const shown = useMemo(() => {
-    const list = tab === 'screen' ? comments.filter((c) => c.route === route) : comments;
-    return [...list].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  }, [comments, tab, route]);
+    return comments
+      .filter((a) => (statusFilter === 'open' ? !a.resolved : a.resolved))
+      .filter((a) => (scope === 'page' ? a.route === route : true))
+      .filter((a) => (!mineOnly || (currentUser && a.authorId === currentUser.id)))
+      .filter((a) => (!keywordNeedle
+        || a.comment.toLowerCase().includes(keywordNeedle)
+        || (a.targetLabel || '').toLowerCase().includes(keywordNeedle)
+        || (a.authorName || '').toLowerCase().includes(keywordNeedle)))
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }, [comments, statusFilter, scope, mineOnly, keywordNeedle, route, currentUser]);
 
-  const openCount = comments.filter((c) => !c.resolved).length;
-
-  const sendReply = (id) => {
-    const body = replyText.trim();
-    if (!body) return;
-    jynx.addReply(id, { id: newId('r'), createdAt: new Date().toISOString(), author: user, body });
-    setReplyText('');
-    setReplyOpen(null);
+  const rectFor = (a) => {
+    const el = elementForComment(a);
+    return el && document.contains(el) ? el.getBoundingClientRect() : null;
   };
 
-  const jumpTo = (comment) => {
-    const el = resolveAnchor(comment.anchor);
-    if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    if (onFocus) onFocus(comment.id);
+  const jumpTo = (a) => {
+    const el = elementForComment(a);
+    if (!el || !document.contains(el)) return;
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    setFlashId(a.id);
+    setTimeout(() => setFlashId((f) => (f === a.id ? null : f)), 1600);
   };
 
-  return (
-    <aside className="jynx-panel">
-      <div className="jynx-panel-head">
-        <span className="jynx-logo">JYNX</span>
-        <span className="jynx-comment-meta">{openCount} פתוחות</span>
-        <button type="button" className="jynx-btn jynx-btn-ghost" style={{ marginInlineStart: 'auto' }} onClick={onClose}>סגור</button>
+  const hoveredRect = hoveredId ? rectFor(shown.find((a) => a.id === hoveredId)) : null;
+  const flashRect = flashId ? rectFor(shown.find((a) => a.id === flashId)) : null;
+
+  return createPortal(
+    <>
+      {/* הילות על העמוד החי — עזר ריחוף בלבד, אף פעם לא יעד תקין להערה. */}
+      <div className="dev-overlay-ignore">
+        {hoveredRect && (
+          <div className="comments-panel-highlight" style={{ top: hoveredRect.top, left: hoveredRect.left, width: hoveredRect.width, height: hoveredRect.height }} />
+        )}
+        {flashRect && (
+          <div className="comments-panel-highlight comments-panel-flash" style={{ top: flashRect.top, left: flashRect.left, width: flashRect.width, height: flashRect.height }} />
+        )}
       </div>
 
-      <div className="jynx-panel-tabs">
-        <button type="button" className={'jynx-tool' + (tab === 'screen' ? ' jynx-tool-on' : '')} onClick={() => setTab('screen')}>
-          המסך הזה
-          <span className="jynx-tool-count">{comments.filter((c) => c.route === route).length}</span>
-        </button>
-        <button type="button" className={'jynx-tool' + (tab === 'all' ? ' jynx-tool-on' : '')} onClick={() => setTab('all')}>
-          הכול
-          <span className="jynx-tool-count">{comments.length}</span>
-        </button>
-      </div>
+      <div className="comments-sidebar comments-sidebar-docked jynx-chrome jynx-ui" data-devblock="jynx-comments-panel">
+        <div className="comments-sidebar-head">
+          <span className="comments-sidebar-title"><MessageSquare size={13} /> Comments</span>
+          <button type="button" className="comments-sidebar-collapse" onClick={onClose} title="Close">
+            <X size={13} />
+          </button>
+        </div>
 
-      <div className="jynx-panel-body">
-        {tab === 'screen' && <div className="jynx-comment-meta">{routeLabel}</div>}
+        <div className="comments-sidebar-filters">
+          <div className="pill-tabs">
+            <button type="button" className={'pill-tab' + (statusFilter === 'open' ? ' active' : '')} onClick={() => setStatusFilter('open')}>Open</button>
+            <button type="button" className={'pill-tab' + (statusFilter === 'done' ? ' active' : '')} onClick={() => setStatusFilter('done')}>Done</button>
+          </div>
+          <button type="button" className={'comments-mine-toggle' + (mineOnly ? ' active' : '')} onClick={() => setMineOnly((v) => !v)}>Just me</button>
+        </div>
+
+        <div className="comments-sidebar-filters comments-sidebar-scope-row">
+          <div className="pill-tabs">
+            <button type="button" className={'pill-tab' + (scope === 'page' ? ' active' : '')} onClick={() => setScope('page')}>This screen</button>
+            <button type="button" className={'pill-tab' + (scope === 'all' ? ' active' : '')} onClick={() => setScope('all')}>All screens</button>
+          </div>
+        </div>
+
+        <div className="comments-sidebar-search-row">
+          <div className="comments-sidebar-search-box">
+            <Search size={12} />
+            <input value={keywordFilter} placeholder="Filter by keyword..." onChange={(e) => setKeywordFilter(e.target.value)} />
+            {keywordFilter && (
+              <button type="button" onClick={() => setKeywordFilter('')} title="Clear keyword filter"><X size={12} /></button>
+            )}
+          </div>
+        </div>
 
         {shown.length === 0 && (
-          <div className="jynx-panel-empty">
-            {tab === 'screen' ? 'אין עדיין הערות על המסך הזה.' : 'אין עדיין הערות.'}
+          <div className="comments-sidebar-empty">
+            No {statusFilter} comments {scope === 'all' ? 'anywhere' : 'on this screen'}
+            {(keywordNeedle || mineOnly) ? ' matching these filters' : ''}.
             <br />
-            הדליקו את מצב ההערה ולחצו על משהו במסך.
+            Ctrl/Cmd+click anything on the page to leave one.
           </div>
         )}
 
-        {shown.map((c) => {
-          const mine = user && c.author && c.author.id === user.id;
-          const canManage = mine || (user && user.isAdmin);
-          return (
-            <div key={c.id} className={'jynx-comment' + (c.resolved ? ' jynx-comment-resolved' : '')} style={focusId === c.id ? { borderColor: 'var(--jynx)' } : undefined}>
-              <div className="jynx-comment-head">
-                <span className="jynx-avatar">{initials(c.author && c.author.name)}</span>
-                <span className="jynx-comment-author">{c.author && c.author.name}</span>
-                {c.author && c.author.isAdmin && <span className="jynx-comment-meta">מנהל</span>}
-                <span className="jynx-comment-meta" style={{ marginInlineStart: 'auto' }}>{timeAgo(c.createdAt)}</span>
-              </div>
+        <div className="comments-sidebar-list">
+          {shown.map((a) => {
+            const replies = a.replies || [];
+            const mine = currentUser && a.authorId === currentUser.id;
+            const canEdit = mine;
+            const canDelete = mine || (currentUser && currentUser.isAdmin);
+            const otherPage = scope === 'all' && a.route && a.route !== route;
+            const isEditing = editingId === a.id;
+            return (
+              <div key={a.id} className="comments-sidebar-item-wrap">
+                <div
+                  className={'comments-sidebar-item' + (otherPage ? ' comments-sidebar-item-other-page' : '')}
+                  onMouseEnter={() => !otherPage && setHoveredId(a.id)}
+                  onMouseLeave={() => setHoveredId((h) => (h === a.id ? null : h))}
+                  onClick={() => !isEditing && !otherPage && jumpTo(a)}
+                >
+                  <span className="comments-sidebar-item-target">
+                    {otherPage && <span className="comments-route-badge">{a.route}</span>}
+                    {a.targetLabel}
+                    {a.resolved && <span className="comments-done-badge"><CheckCircle2 size={10} /> Done</span>}
+                  </span>
 
-              <button type="button" className="jynx-target-chip" onClick={() => jumpTo(c)} title="קפוץ למקום שבו נכתבה">
-                ◎ {c.anchor ? c.anchor.label : 'המסך'}
-              </button>
+                  {isEditing ? (
+                    <div className="comments-edit-box" onClick={(e) => e.stopPropagation()}>
+                      <textarea autoFocus rows={3} value={editText} onChange={(e) => setEditText(e.target.value)} />
+                      <div className="comments-edit-actions">
+                        <button type="button" onClick={() => { setEditingId(null); setEditText(''); }}>Cancel</button>
+                        <button
+                          type="button" className="primary" disabled={!editText.trim()}
+                          onClick={() => { onEdit(a, editText.trim()); setEditingId(null); setEditText(''); }}
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="comments-sidebar-item-comment">
+                      {a.comment}
+                      {canEdit && (
+                        <button
+                          type="button" className="comments-edit-btn" title="Edit your comment"
+                          onClick={(e) => { e.stopPropagation(); setEditingId(a.id); setEditText(a.comment); }}
+                        >
+                          <Pencil size={11} />
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button
+                          type="button" className="comments-edit-btn comments-delete-self-btn" title="Delete this comment"
+                          onClick={(e) => { e.stopPropagation(); onDelete(a); }}
+                        >
+                          <Trash2 size={11} />
+                        </button>
+                      )}
+                    </p>
+                  )}
 
-              <div className="jynx-comment-body">{c.body}</div>
+                  {replies.length > 0 && (
+                    <div className="comments-reply-list">
+                      {replies.map((r) => (
+                        <div key={r.id} className="comments-reply">
+                          <p className="comments-reply-body">{r.body}</p>
+                          <span className="comments-reply-meta">{r.authorName} · {new Date(r.createdAt).toLocaleString('en-US')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-              {(c.replies || []).map((r) => (
-                <div key={r.id} className="jynx-reply">
-                  <div className="jynx-comment-head">
-                    <span className="jynx-comment-author">{r.author && r.author.name}</span>
-                    <span className="jynx-comment-meta">{timeAgo(r.createdAt)}</span>
-                  </div>
-                  <div className="jynx-comment-body">{r.body}</div>
-                </div>
-              ))}
+                  <span className="comments-sidebar-item-meta">
+                    <span className="jynx-author-link">{a.authorName}</span>
+                    {' · '}{new Date(a.createdAt).toLocaleString('en-US')}
+                  </span>
 
-              {replyOpen === c.id ? (
-                <>
-                  <textarea
-                    className="jynx-textarea"
-                    style={{ minHeight: '54px' }}
-                    autoFocus
-                    placeholder="תגובה…"
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply(c.id); } }}
-                  />
-                  <div className="jynx-comment-actions" style={{ justifyContent: 'flex-end' }}>
-                    <button type="button" className="jynx-btn jynx-btn-ghost" onClick={() => { setReplyOpen(null); setReplyText(''); }}>ביטול</button>
-                    <button type="button" className="jynx-btn jynx-btn-primary" onClick={() => sendReply(c.id)} disabled={!replyText.trim()}>שלח</button>
-                  </div>
-                </>
-              ) : (
-                <div className="jynx-comment-actions">
-                  <button type="button" className="jynx-btn jynx-btn-ghost" onClick={() => { setReplyOpen(c.id); setReplyText(''); }}>תגובה</button>
-                  <button type="button" className="jynx-btn jynx-btn-ghost" onClick={() => jynx.setResolved(c.id, !c.resolved)}>
-                    {c.resolved ? 'פתח מחדש' : 'סמן כטופל'}
-                  </button>
-                  {canManage && (
-                    <button type="button" className="jynx-btn jynx-btn-ghost jynx-btn-danger" onClick={() => jynx.remove(c.id)}>מחק</button>
+                  {replyingId === a.id ? (
+                    <div className="comments-edit-box" onClick={(e) => e.stopPropagation()}>
+                      <textarea autoFocus rows={2} placeholder="Reply..." value={replyText} onChange={(e) => setReplyText(e.target.value)} />
+                      <div className="comments-edit-actions">
+                        <button type="button" onClick={() => { setReplyingId(null); setReplyText(''); }}>Cancel</button>
+                        <button
+                          type="button" className="primary" disabled={!replyText.trim()}
+                          onClick={() => { onReply(a, replyText.trim()); setReplyingId(null); setReplyText(''); }}
+                        >
+                          Reply
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="comments-edit-actions" style={{ justifyContent: 'flex-start' }}>
+                      <button type="button" className="comments-reply-btn" onClick={(e) => { e.stopPropagation(); setReplyingId(a.id); setReplyText(''); }}>
+                        <CornerDownRight size={11} /> Reply
+                      </button>
+                      <button type="button" className="comments-reply-btn" onClick={(e) => { e.stopPropagation(); onResolve(a, !a.resolved); }}>
+                        {a.resolved ? 'Reopen' : 'Mark done'}
+                      </button>
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
-          );
-        })}
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </aside>
+    </>,
+    document.body,
   );
 }

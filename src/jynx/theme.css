@@ -1,0 +1,438 @@
+/* ==================================================================
+   ה-chrome של Jynx, כפי שהוא ב-commando.
+
+   הכללים כאן הועתקו משלושה מקומות בפרויקט המקור — client/src/theme.js
+   (הפלטה, .dev-fab, .dev-only, .pill-tab), ה-CSS שבתוך DevAuthGate.jsx
+   (הסרגל), ואלה שבתוך overlay/DevOverlay.jsx, overlay/CommentsPanel.jsx
+   ו-overlay/AdminAnnotationMarkers.jsx (ההילה, קופסת התגובה, הפאנל
+   והנקודות). שם הם מוזרקים כ-<style> מתוך הרכיבים; כאן הם קובץ אחד, כי
+   Vite ממילא אורז את ה-CSS.
+
+   המשתנים מוגדרים על .jynx-ui ולא על :root כדי שלא ידלפו אל RIO עצמה —
+   הדמו מביא פלטה משלו. Jynx נשארת אנגלית ו-LTR, בדיוק כמו במקור: כלי
+   פיתוח שיושב מעל המערכת, לא חלק ממנה.
+   ================================================================== */
+
+.jynx-ui {
+  --bg: #0A0B0C;
+  --panel: #101215;
+  --panel-raised: #17191D;
+  --panel-hi: #1E2126;
+  --line: #23262B;
+  --line-strong: #33383E;
+  --text: #E9ECEF;
+  --text-dim: #868E97;
+  --accent: #35E08F;
+  --accent-ink: #04150C;
+  --warn: #E6A93C;
+  --danger: #E85A4D;
+  --info: #4A9EDA;
+  --jynx: #9B82FF;
+  --dev: var(--warn);
+  --red: var(--danger);
+  --green: var(--accent);
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, .35);
+  --shadow-md: 0 16px 34px rgba(0, 0, 0, .55);
+  --radius-lg: 4px;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-jynx: 'Space Grotesk', var(--font-sans);
+  --ease-io: cubic-bezier(.6, 0, .3, 1);
+
+  direction: ltr;
+  text-align: left;
+  font-family: var(--font-jynx);
+}
+
+/* ---------- הבועה ---------- */
+
+.dev-fab-wrap { position: fixed; bottom: 20px; right: 20px; z-index: 80; }
+.dev-fab {
+  display: flex; align-items: center; gap: 6px; background: var(--panel); border: 1px solid var(--jynx);
+  color: var(--jynx); border-radius: 20px; padding: 8px 14px; cursor: grab; touch-action: none; box-shadow: var(--shadow-md);
+  font-family: var(--font-jynx); font-size: 12px; font-weight: 700; letter-spacing: .02em; transition: background .15s ease;
+}
+.dev-fab:hover { background: color-mix(in srgb, var(--jynx) 10%, var(--panel)); }
+.dev-fab:active { cursor: grabbing; }
+.dev-fab svg { color: var(--jynx); }
+.jynx-logo {
+  font-family: var(--font-jynx); font-weight: 700; font-size: 14px; letter-spacing: .03em;
+  background: linear-gradient(100deg, var(--jynx), color-mix(in srgb, var(--jynx) 45%, #ffffff 55%));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.jynx-logo-error { background: none; -webkit-background-clip: initial; background-clip: initial; color: var(--red); }
+.dev-fab-collapsed { position: relative; }
+.dev-fab-collapsed-badge {
+  position: absolute; top: -4px; right: -4px; min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 9px; background: var(--jynx); color: #fff; font-size: 9.5px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; border: 2px solid var(--panel);
+}
+.dev-fab-waking-spinner { animation: devLoginSpin .9s linear infinite; }
+@keyframes devLoginSpin { to { transform: rotate(360deg); } }
+
+/* פנים זעירות בתוך הבועה — ראו JynxFace.jsx. */
+.jynx-face { display: inline-flex; align-items: center; gap: 3px; height: 8px; }
+.jynx-face-eye {
+  width: 3.5px; height: 3.5px; border-radius: 50%; background: currentColor; flex: none;
+  transition: height .12s ease, transform .12s ease, background .15s ease;
+}
+.jynx-face-blink { height: 1px; }
+.jynx-face-thinking .jynx-face-eye { animation: jynxFaceDart .8s ease-in-out infinite; }
+@keyframes jynxFaceDart { 0%, 100% { transform: translateX(-1.5px); } 50% { transform: translateX(1.5px); } }
+.jynx-face-typing .jynx-face-eye { height: 2.5px; }
+.jynx-face-success .jynx-face-eye { background: var(--green); transform: scale(1.3); }
+.jynx-face-error .jynx-face-eye { background: var(--red); animation: jynxFaceShake .3s ease; }
+@keyframes jynxFaceShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-1.5px); } 75% { transform: translateX(1.5px); } }
+
+.jynx-breathe { animation: jynxBreathe 3s ease-in-out infinite; }
+@keyframes jynxBreathe {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 color-mix(in srgb, var(--jynx) 35%, transparent); }
+  50% { transform: scale(1.04); box-shadow: 0 0 10px 2px color-mix(in srgb, var(--jynx) 25%, transparent); }
+}
+.jynx-thinking-pulse { animation: jynxThinkingPulse .9s ease-in-out infinite; }
+@keyframes jynxThinkingPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 color-mix(in srgb, var(--jynx) 60%, transparent); }
+  50% { transform: scale(1.08); box-shadow: 0 0 14px 4px color-mix(in srgb, var(--jynx) 45%, transparent); }
+}
+
+/* ---------- פאנל הכניסה ---------- */
+
+.dev-fab-panel {
+  position: absolute; bottom: calc(100% + 10px); right: 0; width: 340px; max-width: 88vw;
+  background: var(--bg); box-shadow: var(--shadow-md); animation: fadeSlideUp .16s ease;
+}
+@keyframes fadeSlideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.dev-only {
+  border: 1px dashed var(--jynx); border-radius: 9px; padding: 8px 10px; position: relative;
+  background: color-mix(in srgb, var(--jynx) 6%, transparent);
+}
+.dev-only-tag {
+  position: absolute; top: -9px; left: 10px; background: var(--bg); color: var(--jynx);
+  font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; letter-spacing: .06em;
+  padding: 0 6px; text-transform: uppercase;
+}
+.env-strip-identity {
+  display: flex; flex-direction: column; align-items: stretch; gap: 5px; font-size: 11px; color: var(--dev);
+}
+.env-strip-identity input {
+  background: var(--bg); border: 1px solid var(--dev); border-radius: 5px; padding: 5px 8px;
+  color: var(--text); font-family: var(--font-mono); font-size: 12px;
+}
+.env-strip-identity input:focus { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--dev) 25%, transparent); }
+.dev-login-panel { display: flex; flex-direction: column; gap: 8px; }
+.dev-login-error { color: var(--red); font-size: 11.5px; }
+.dev-login-submit {
+  background: var(--jynx); color: #fff; border: none; border-radius: 8px; padding: 7px 0; font-weight: 700;
+  font-size: 12.5px; cursor: pointer; font-family: var(--font-sans);
+}
+.dev-login-submit:disabled { opacity: .5; cursor: not-allowed; }
+.dev-login-spinner { display: block; margin: 0 auto; animation: devLoginSpin .7s linear infinite; }
+
+/* ---------- הסרגל ---------- */
+
+.dev-fab-toolbar-wrap {
+  position: fixed; z-index: 79; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+  transition: right .22s var(--ease-io), bottom .22s var(--ease-io);
+}
+.dev-fab-toolbar {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--panel); border: 1px solid var(--jynx); border-radius: 20px; padding: 5px 8px;
+  box-shadow: var(--shadow-md); cursor: grab; touch-action: none;
+  transition: opacity .14s ease, transform .14s ease;
+}
+.dev-fab-toolbar:active { cursor: grabbing; }
+.dev-fab-toolbar.vertical { flex-direction: column; align-items: stretch; border-radius: 16px; }
+.dev-toolbar-grip {
+  display: flex; align-items: center; justify-content: center; width: 22px; height: 30px; color: var(--text-dim);
+  flex: none; align-self: center; background: none; border: 1px dashed color-mix(in srgb, var(--jynx) 40%, transparent);
+  border-radius: 6px; padding: 0; cursor: pointer; transition: color .12s, border-color .12s;
+}
+.dev-toolbar-grip:hover { color: var(--jynx); border-color: var(--jynx); }
+.jynx-toolbar-item { position: relative; display: flex; flex: none; align-self: center; }
+.jynx-toolbar-key-badge {
+  position: absolute; top: -3px; inset-inline-end: -3px; min-width: 12px; height: 12px; border-radius: 6px;
+  background: var(--panel-hi); color: var(--text-dim); border: 1px solid var(--line-strong);
+  font-family: var(--font-mono); font-size: 8px; font-weight: 700; line-height: 1;
+  display: flex; align-items: center; justify-content: center; pointer-events: none;
+}
+.dev-toolbar-icon-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: calc(30px * var(--jynx-icon-scale, 1)); height: calc(30px * var(--jynx-icon-scale, 1));
+  border-radius: 8px; border: 1px solid transparent; background: none; color: var(--text-dim);
+  cursor: pointer; flex: none; transition: color .12s, background .12s, border-color .12s;
+}
+.dev-toolbar-icon-btn:hover { color: var(--jynx); background: var(--panel-raised); }
+.dev-toolbar-icon-btn.active { color: var(--jynx); border-color: var(--jynx); background: color-mix(in srgb, var(--jynx) 14%, transparent); }
+
+.jynx-hotkey-hint {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 3px; position: relative;
+  font-family: var(--font-sans); max-width: 240px; text-align: end;
+}
+.jynx-hotkey-hint-text { font-size: 10.5px; color: var(--text-dim); }
+.jynx-hotkey-current {
+  background: none; border: none; color: var(--jynx); font-size: 10.5px; font-weight: 700; cursor: pointer;
+  padding: 0; text-decoration: underline; text-underline-offset: 2px; font-family: var(--font-mono);
+}
+.jynx-hotkey-current:hover { color: var(--dev); }
+.jynx-hotkey-picker {
+  position: absolute; top: 100%; margin-top: 4px; right: 0; min-width: 190px; background: var(--panel);
+  border: 1px solid var(--jynx); border-radius: 10px; padding: 6px; display: flex; flex-direction: column; gap: 2px;
+  box-shadow: var(--shadow-md); animation: devAnnotateIn .12s ease; z-index: 1;
+}
+.jynx-hotkey-picker button {
+  display: flex; align-items: center; gap: 6px; background: none; border: none; border-radius: 6px; padding: 7px 8px;
+  font-family: var(--font-sans); font-size: 12px; font-weight: 600; color: var(--text); cursor: pointer; text-align: start;
+}
+.jynx-hotkey-picker button:hover { background: var(--panel-raised); color: var(--jynx); }
+.jynx-hotkey-picker button.active { background: var(--jynx); color: #fff; }
+
+/* ---------- תפריט ה-Hi ---------- */
+
+.dev-greeting-wrap { position: relative; display: flex; flex: none; align-self: center; }
+.dev-greeting-btn {
+  display: flex; align-items: center; gap: 5px; background: none; border: 1px solid transparent; border-radius: 8px;
+  padding: 5px 9px; color: var(--text-dim); font-family: var(--font-sans); font-size: 11.5px; font-weight: 700; cursor: pointer;
+}
+.dev-greeting-btn:hover { color: var(--jynx); background: var(--panel-raised); }
+.dev-greeting-menu {
+  position: absolute; bottom: calc(100% + 8px); right: 0; min-width: 210px; background: var(--panel);
+  border: 1px solid var(--jynx); border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 6px;
+  box-shadow: var(--shadow-md); animation: devAnnotateIn .12s ease; z-index: 2;
+}
+.dev-greeting-name { font-size: 12.5px; font-weight: 700; color: var(--text); }
+.dev-greeting-role { font-size: 10.5px; color: var(--text-dim); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .05em; }
+.dev-greeting-shortcuts { display: flex; flex-direction: column; gap: 3px; border-top: 1px solid var(--line); padding-top: 6px; }
+.dev-greeting-shortcut { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); }
+.dev-greeting-shortcut kbd {
+  background: var(--panel-hi); border: 1px solid var(--line-strong); border-radius: 4px; padding: 0 5px;
+  font-family: var(--font-mono); font-size: 10px; color: var(--text);
+}
+.dev-greeting-logout {
+  background: none; border: 1px solid var(--line); border-radius: 7px; padding: 6px 10px; color: var(--text-dim);
+  font-family: var(--font-sans); font-size: 11.5px; font-weight: 700; cursor: pointer;
+}
+.dev-greeting-logout:hover { color: var(--red); border-color: var(--red); }
+
+/* ---------- ההילה שמסמנת את היעד ---------- */
+
+.dev-overlay-highlight {
+  position: fixed; pointer-events: none; z-index: 99999; border-radius: 8px;
+  border: 2px solid var(--jynx);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--jynx) 28%, transparent),
+              0 0 18px color-mix(in srgb, var(--jynx) 50%, transparent);
+  transition: top .06s ease, left .06s ease, width .06s ease, height .06s ease;
+}
+.dev-overlay-highlight-jynx {
+  border-color: var(--dev);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dev) 28%, transparent),
+              0 0 18px color-mix(in srgb, var(--dev) 50%, transparent);
+}
+.dev-overlay-highlight-secondary {
+  border-color: #2F8FCE;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #2F8FCE 28%, transparent),
+              0 0 18px color-mix(in srgb, #2F8FCE 50%, transparent);
+}
+
+/* ---------- קופסת התגובה ---------- */
+
+.dev-annotate-popover {
+  position: fixed; z-index: 100000; width: 290px; background: var(--panel); border: 1px solid var(--dev);
+  border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 8px; box-shadow: var(--shadow-md);
+  animation: devAnnotateIn .12s ease;
+}
+@keyframes devAnnotateIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.dev-annotate-popover-head { display: flex; align-items: center; gap: 6px; }
+.dev-annotate-popover-grip {
+  display: flex; align-items: center; flex: 0 0 auto; color: var(--text-dim); cursor: grab; touch-action: none;
+}
+.dev-annotate-popover-grip:active { cursor: grabbing; }
+.dev-annotate-popover-grip:hover { color: var(--dev); }
+.dev-annotate-popover-label {
+  flex: 1; font-family: var(--font-mono); font-size: 10.5px; color: var(--dev); text-transform: uppercase; letter-spacing: .04em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.dev-annotate-popover textarea {
+  width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 7px 9px;
+  font-size: 14px; line-height: 1.4; font-family: var(--font-sans); color: var(--text); resize: vertical;
+}
+.dev-annotate-popover textarea:focus { outline: none; border-color: var(--dev); }
+.dev-annotate-popover-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.dev-annotate-btn {
+  border: none; border-radius: 7px; padding: 6px 12px; font-family: var(--font-sans); font-weight: 700; font-size: 12px;
+  cursor: pointer; background: var(--panel-raised); color: var(--text-dim);
+}
+.dev-annotate-btn-primary { background: var(--dev); color: #fff; }
+.dev-annotate-btn:disabled { opacity: .5; cursor: not-allowed; }
+.dev-annotate-picking-hint {
+  font-size: 11.5px; color: var(--dev); background: color-mix(in srgb, var(--dev) 10%, transparent);
+  border-radius: 6px; padding: 5px 9px; animation: devAdminPulse 1.2s ease-in-out infinite;
+}
+@keyframes devAdminPulse { 50% { opacity: .55; } }
+
+/* ---------- הנקודות שעל המסך ---------- */
+
+.admin-marker-highlight {
+  position: fixed; pointer-events: none; z-index: 99995; border-radius: 8px; border: 2px solid var(--jynx);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--jynx) 28%, transparent),
+              0 0 18px color-mix(in srgb, var(--jynx) 50%, transparent);
+  transition: top .1s ease, left .1s ease, width .1s ease, height .1s ease;
+}
+.admin-marker-highlight-secondary {
+  border-color: var(--dev);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dev) 28%, transparent),
+              0 0 18px color-mix(in srgb, var(--dev) 50%, transparent);
+}
+.admin-marker-dot-wrap { position: fixed; z-index: 99998; }
+.admin-marker-dot {
+  width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--panel); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700;
+  box-shadow: var(--shadow-sm); cursor: pointer; font-family: var(--font-sans); padding: 0;
+  transition: width .14s ease, height .14s ease, transform .14s ease;
+}
+.admin-marker-dot-grown { width: 19px; height: 19px; font-size: 10px; transform: translate(-4px, -4px); }
+.admin-marker-dot-quiet { opacity: .5; }
+.marker-anim-none { animation: markerBreatheNone 2.6s ease-in-out infinite; }
+@keyframes markerBreatheNone {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--red) 45%, transparent); }
+  50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--red) 0%, transparent); }
+}
+.marker-anim-done { animation: markerGlowDone 2.4s ease-in-out infinite; }
+@keyframes markerGlowDone {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--green) 40%, transparent); }
+  50% { box-shadow: 0 0 6px 2px color-mix(in srgb, var(--green) 35%, transparent); }
+}
+.admin-marker-detail {
+  position: absolute; top: 22px; left: 0; width: 250px; max-width: 70vw; max-height: 60vh; overflow-y: auto;
+  background: var(--panel); border: 1px solid var(--jynx); border-radius: 10px; padding: 8px;
+  display: flex; flex-direction: column; gap: 8px; box-shadow: var(--shadow-md); animation: devAnnotateIn .12s ease;
+}
+.admin-marker-detail-item { display: flex; flex-direction: column; gap: 3px; }
+.admin-marker-detail-item + .admin-marker-detail-item { border-top: 1px solid var(--line); padding-top: 8px; }
+.admin-marker-detail-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.admin-marker-detail-comment { margin: 0; font-size: 12px; color: var(--text); }
+.admin-marker-detail-meta { font-size: 10px; color: var(--text-dim); }
+.admin-marker-done-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--green); }
+
+/* ---------- פאנל ההערות ---------- */
+
+.comments-panel-highlight {
+  position: fixed; pointer-events: none; z-index: 99996; border-radius: 8px; border: 2px solid var(--jynx);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--jynx) 28%, transparent),
+              0 0 18px color-mix(in srgb, var(--jynx) 50%, transparent);
+  transition: top .1s ease, left .1s ease, width .1s ease, height .1s ease;
+}
+.comments-panel-flash { border-color: var(--jynx); animation: commentsFlash 1.6s ease; }
+@keyframes commentsFlash {
+  0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--jynx) 28%, transparent), 0 0 18px color-mix(in srgb, var(--jynx) 50%, transparent); }
+  50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--jynx) 45%, transparent), 0 0 28px color-mix(in srgb, var(--jynx) 70%, transparent); }
+}
+.comments-sidebar {
+  position: fixed; width: 280px; max-height: calc(100vh - 100px); z-index: 79;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-md);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+/* המגירה המעוגנת: לבקשה מפורשת, הפאנל נפתח כרצועה מלאה בצד ולא ככרטיס צף,
+   והדמו מצטמצם ברוחב שלה — כלל ה-margin למטה — כדי ששום דבר באתר לא ייחתך
+   או יוסתר מאחוריה. הרוחב מוגדר פעם אחת כמשתנה ומשמש את שניהם. */
+:root { --jynx-side-width: 340px; }
+.comments-sidebar-docked {
+  top: 0; bottom: 0; left: 0; width: var(--jynx-side-width); max-width: 92vw; max-height: none;
+  border-radius: 0; border-block: none; border-inline-start: none;
+  border-inline-end: 1px solid var(--line-strong);
+  animation: jynxSideIn .2s var(--ease-io);
+}
+@keyframes jynxSideIn { from { transform: translateX(-14px); opacity: 0; } to { transform: none; opacity: 1; } }
+/* המשתנה יורש אל תוך #root, ושם הדמו קורא אותו (ראו shellStyle ב-App.jsx). */
+body.jynx-side-open { --jynx-side-offset: var(--jynx-side-width); }
+.comments-sidebar-docked .comments-sidebar-head { cursor: default; }
+.jynx-users-panel { top: 60px; right: 20px; width: 280px; max-height: calc(100vh - 140px); }
+.jynx-users-panel .comments-sidebar-head { cursor: default; }
+.comments-sidebar-head { padding: 8px 10px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 6px; cursor: grab; touch-action: none; }
+.comments-sidebar-head:active { cursor: grabbing; }
+.comments-sidebar-grip { display: flex; align-items: center; color: var(--text-dim); }
+.comments-sidebar-title { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--jynx); flex: 1; }
+.comments-sidebar-collapse { background: none; border: none; color: var(--text-dim); cursor: pointer; display: flex; }
+.comments-sidebar-collapse:hover { color: var(--jynx); }
+.comments-sidebar-filters { padding: 7px 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pill-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill-tab {
+  background: transparent; border: 1px solid var(--line); color: var(--text-dim); border-radius: var(--radius-lg);
+  padding: 9px 18px; font-family: var(--font-sans); font-weight: 700; font-size: 13.5px; cursor: pointer;
+  transition: border-color .15s ease, color .15s ease, background .15s ease;
+}
+.pill-tab:hover { color: var(--text); }
+.pill-tab.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.comments-sidebar-filters .pill-tabs { gap: 5px; }
+.comments-sidebar-filters .pill-tab { padding: 4px 11px; font-size: 11px; border-radius: 8px; border-width: 1px; }
+.comments-mine-toggle {
+  background: none; border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; font-size: 11px;
+  font-weight: 700; color: var(--text-dim); cursor: pointer; font-family: var(--font-sans); flex: none;
+}
+.comments-mine-toggle.active { border-color: var(--jynx); color: var(--jynx); background: color-mix(in srgb, var(--jynx) 12%, transparent); }
+.comments-sidebar-search-row { padding: 0 10px 7px; display: flex; align-items: center; gap: 6px; }
+.comments-sidebar-search-box {
+  display: flex; align-items: center; gap: 5px; flex: 1; background: var(--bg); border: 1px solid var(--line);
+  border-radius: 8px; padding: 4px 8px; color: var(--text-dim);
+}
+.comments-sidebar-search-box input {
+  flex: 1; min-width: 0; background: none; border: none; outline: none; color: var(--text);
+  font-family: var(--font-sans); font-size: 12px;
+}
+.comments-sidebar-search-box button { background: none; border: none; color: var(--text-dim); cursor: pointer; display: flex; padding: 0; }
+.comments-sidebar-search-box button:hover { color: var(--red); }
+.comments-sidebar-empty { padding: 18px 12px; font-size: 12px; color: var(--text-dim); text-align: center; line-height: 1.5; }
+.comments-sidebar-list { overflow-y: auto; padding: 0 10px 10px; display: flex; flex-direction: column; gap: 8px; }
+.comments-sidebar-item-wrap { display: flex; flex-direction: column; }
+.comments-sidebar-item {
+  background: var(--panel-raised); border: 1px solid var(--line); border-radius: 9px; padding: 8px 9px;
+  display: flex; flex-direction: column; gap: 5px; cursor: pointer; transition: border-color .12s ease;
+}
+.comments-sidebar-item:hover { border-color: var(--jynx); }
+.comments-sidebar-item-other-page { cursor: default; opacity: .8; }
+.comments-sidebar-item-target {
+  display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+  font-family: var(--font-mono); font-size: 10px; color: var(--jynx); text-transform: uppercase; letter-spacing: .04em;
+}
+.comments-route-badge { border: 1px solid var(--line-strong); border-radius: 4px; padding: 0 5px; color: var(--text-dim); }
+.comments-done-badge { display: inline-flex; align-items: center; gap: 3px; color: var(--green); }
+.comments-sidebar-item-comment {
+  margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--text); white-space: pre-wrap; word-break: break-word;
+}
+.comments-sidebar-item-meta { font-size: 10px; color: var(--text-dim); }
+.comments-edit-btn {
+  background: none; border: none; color: var(--text-dim); cursor: pointer; padding: 0 2px; vertical-align: -1px;
+}
+.comments-edit-btn:hover { color: var(--jynx); }
+.comments-delete-self-btn:hover { color: var(--red); }
+.comments-edit-box { display: flex; flex-direction: column; gap: 6px; }
+.comments-edit-box textarea {
+  width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--line); border-radius: 7px;
+  padding: 6px 8px; font-size: 12.5px; line-height: 1.4; font-family: var(--font-sans); color: var(--text); resize: vertical;
+}
+.comments-edit-box textarea:focus { outline: none; border-color: var(--jynx); }
+.comments-edit-actions { display: flex; justify-content: flex-end; gap: 6px; }
+.comments-edit-actions button {
+  border: none; border-radius: 7px; padding: 5px 11px; font-family: var(--font-sans); font-weight: 700; font-size: 11.5px;
+  cursor: pointer; background: var(--panel-hi); color: var(--text-dim);
+}
+.comments-edit-actions button.primary { background: var(--jynx); color: #fff; }
+.comments-edit-actions button:disabled { opacity: .5; cursor: not-allowed; }
+.comments-reply-list { display: flex; flex-direction: column; gap: 5px; margin-top: 3px; padding-inline-start: 8px; border-inline-start: 2px solid var(--line); }
+.comments-reply { display: flex; flex-direction: column; gap: 2px; }
+.comments-reply-body { margin: 0; font-size: 12px; line-height: 1.4; color: var(--text); white-space: pre-wrap; word-break: break-word; }
+.comments-reply-meta { font-size: 9.5px; color: var(--text-dim); }
+.comments-reply-btn {
+  align-self: flex-start; background: none; border: none; color: var(--text-dim); cursor: pointer;
+  font-family: var(--font-sans); font-size: 11px; font-weight: 700; padding: 0;
+}
+.comments-reply-btn:hover { color: var(--jynx); }
+.comments-send-error { padding: 7px 10px; font-size: 11.5px; color: var(--red); }
+.jynx-author-link { cursor: default; text-decoration: underline; text-underline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .jynx-breathe, .jynx-thinking-pulse, .dev-fab-toolbar-wrap, .dev-fab-toolbar,
+  .marker-anim-none, .marker-anim-done, .dev-annotate-picking-hint,
+  .comments-panel-flash, .dev-fab-panel, .admin-marker-detail, .comments-sidebar-docked { animation: none; }
+  .rio-shell { transition: none; }
+  .dev-overlay-highlight, .admin-marker-highlight, .comments-panel-highlight { transition: none; }
+}

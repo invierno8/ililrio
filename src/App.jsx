@@ -23,7 +23,17 @@ import EntryGateScreen from './screens/admin/EntryGateScreen.jsx';
 const BOOT_MS = 650;
 const SCREEN_MS = 320;
 
-const shellStyle = { display: 'flex', height: '100vh', width: '100%', overflow: 'hidden', background: 'var(--background)', color: 'var(--text-primary)', fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: '1.4' };
+// --jynx-side-offset הוא הרוחב שמגירת ההערות של Jynx תופסת כרגע (0 כשהיא
+// סגורה). הדמו מצטמצם בו במקום להיות מכוסה. הרוחב חייב להיחשב כאן ולא
+// בגיליון של Jynx: הדף כולו RTL, ובקופסה שרוחבה 100% הדפדפן מתעלם מ-
+// margin-left ומשאיר את המסך במקומו.
+const shellStyle = {
+  display: 'flex', height: '100vh', overflow: 'hidden',
+  marginLeft: 'var(--jynx-side-offset, 0px)',
+  width: 'calc(100% - var(--jynx-side-offset, 0px))',
+  transition: 'margin-left .2s cubic-bezier(.6,0,.3,1), width .2s cubic-bezier(.6,0,.3,1)',
+  background: 'var(--background)', color: 'var(--text-primary)', fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: '1.4',
+};
 const mainStyle = { flex: '1 1 auto', height: '100vh', overflowY: 'auto', padding: '18px 20px 48px', zoom: '0.88' };
 const bannerStyle = { display: 'flex', alignItems: 'center', height: '34px', padding: '0 12px', margin: '-18px -20px 16px', background: 'var(--tw-amber-50, #fffbeb)', borderBottom: '1px solid var(--border)', fontSize: '12px', color: 'var(--text-secondary)' };
 
@@ -62,14 +72,14 @@ export default function App() {
 
   if (state.bootLoading) {
     return (
-      <div dir="rtl" style={shellStyle}>
+      <div dir="rtl" className="rio-shell" style={shellStyle}>
         <BootSkeleton />
       </div>
     );
   }
 
   return (
-    <div dir="rtl" style={shellStyle}>
+    <div dir="rtl" className="rio-shell" style={shellStyle}>
       <Sidebar v={v} />
 
       <main ref={mainRef} style={mainStyle}>
