@@ -1,19 +1,5 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-09T21:37:33.896Z",
-  "comments": [
-    {
-      "id": "c-75d2c482",
-      "createdAt": "2026-09-09T21:37:33.896Z",
-      "authorId": "u-fb97eb31da",
-      "authorName": "ilil",
-      "route": "P1:catalog",
-      "targetLabel": "תמונה",
-      "targetPath": "0/1/1/0/1/0/0",
-      "secondaryTargets": [],
-      "comment": "בדיקה חיה — ההערה הזו נשלחה מהאתר המפורסם.",
-      "resolved": false,
-      "replies": []
-    }
-  ]
+  "updatedAt": "2026-09-09T21:37:51.252Z",
+  "comments": []
 }
