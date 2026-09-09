@@ -1,4 +1,12 @@
 {
   "version": 1,
-  "users": []
+  "users": [
+    {
+      "id": "u-e1608f75c5",
+      "name": "tom",
+      "isAdmin": true,
+      "firstSeen": "2026-09-09T21:00:16.795Z",
+      "lastSeen": "2026-09-09T21:00:16.795Z"
+    }
+  ]
 }
