@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useRio } from './store/index.js';
 import Sidebar from './components/Sidebar.jsx';
 import ScreenSkeleton, { BootSkeleton } from './components/Skeleton.jsx';
+import DesktopOnly, { useIsNarrow } from './components/DesktopOnly.jsx';
 
 import CatalogScreen from './screens/CatalogScreen.jsx';
 import ItemDetailScreen from './screens/ItemDetailScreen.jsx';
@@ -33,6 +34,7 @@ const bannerStyle = { display: 'flex', alignItems: 'center', height: '34px', pad
 export default function App() {
   const { state, store, v } = useRio();
   const mainRef = useRef(null);
+  const isNarrow = useIsNarrow();
 
   // אזור התוכן הוא שגולל, ולא החלון — לכן החנות מקבלת אליו הפניה.
   useEffect(() => {
@@ -55,6 +57,8 @@ export default function App() {
     const t = setTimeout(() => store.setState({ screenLoading: false }), SCREEN_MS);
     return () => clearTimeout(t);
   }, [screenKey, store]);
+
+  if (isNarrow) return <DesktopOnly />;
 
   if (state.bootLoading) {
     return (

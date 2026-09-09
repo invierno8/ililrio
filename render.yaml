@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: rio-jynx
+    runtime: node
+    plan: free
+    region: frankfurt
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/jynx/health
+    envVars:
+      - key: GITHUB_REPO
+        value: invierno8/ililrio
+      - key: GITHUB_BRANCH
+        value: main
+      - key: ALLOWED_ORIGINS
+        value: https://invierno8.github.io
+      # ארבעת אלה נכנסים ידנית בלוח הבקרה של Render אחרי היצירה:
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: JYNX_SESSION_SECRET
+        generateValue: true
+      - key: JYNX_PASSWORD_TOM
+        sync: false
+      - key: JYNX_PASSWORD_ILIL
+        sync: false
+      - key: JYNX_REVIEWER_PASSWORD
+        sync: false

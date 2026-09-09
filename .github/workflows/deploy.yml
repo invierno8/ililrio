@@ -3,6 +3,12 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+    # הערות של Jynx נשמרות כקבצים תחת data/ על ידי השירות. אין סיבה לבנות
+    # ולפרוס את האתר מחדש בכל הערה — ולכן הנתיבים האלה אינם מפעילים בנייה.
+    paths-ignore:
+      - 'data/**'
+      - 'server/**'
+      - '**.md'
   workflow_dispatch:
 
 permissions:
@@ -25,6 +31,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+        env:
+          # כתובת שירות ההערות. כל עוד המשתנה ריק, Jynx עובדת במצב מקומי
+          # וההערות נשמרות רק בדפדפן של המעיר. להגדרה:
+          #   gh variable set JYNX_API --repo invierno8/ililrio --body "https://…"
+          VITE_JYNX_API: ${{ vars.JYNX_API }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
