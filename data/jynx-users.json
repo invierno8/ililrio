@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-09T21:54:08.742Z",
+  "updatedAt": "2026-09-09T21:54:17.316Z",
   "users": [
     {
       "id": "u-e1608f75c5",
@@ -15,7 +15,7 @@
       "isAdmin": true,
       "addedBy": "self",
       "firstSeen": "2026-09-09T21:37:04.974Z",
-      "lastSeen": "2026-09-09T21:54:08.742Z"
+      "lastSeen": "2026-09-09T21:54:17.316Z"
     }
   ]
 }
