@@ -1,4 +1,24 @@
 {
   "version": 1,
-  "comments": []
+  "updatedAt": "2026-09-09T21:00:27.223Z",
+  "comments": [
+    {
+      "id": "c-verify-1",
+      "createdAt": "2026-09-09T21:00:27.223Z",
+      "author": {
+        "id": "u-e1608f75c5",
+        "name": "tom",
+        "isAdmin": true
+      },
+      "route": "P1:catalog",
+      "anchor": {
+        "path": "0/1/2",
+        "label": "בדיקה",
+        "tag": "div"
+      },
+      "body": "בדיקת התמדה",
+      "resolved": false,
+      "replies": []
+    }
+  ]
 }
