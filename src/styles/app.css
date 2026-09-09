@@ -1,0 +1,74 @@
+/* השכבה היחידה שנוספה מעבר לעיצוב המקורי: שלדי טעינה ומעברים עדינים.
+   שום כלל כאן אינו משנה צבע, טיפוגרפיה או מידה של רכיב קיים. */
+
+/* ---------- שלד טעינה ---------- */
+
+.rio-skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--tw-gray-100);
+}
+
+.rio-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.72) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: rio-shimmer 1.25s var(--ease-out) infinite;
+}
+
+/* הדף כולו RTL, ולכן הבזק האור נע מימין לשמאל. */
+[dir='rtl'] .rio-skeleton::after {
+  transform: translateX(100%);
+  animation-name: rio-shimmer-rtl;
+}
+
+@keyframes rio-shimmer {
+  100% { transform: translateX(100%); }
+}
+
+@keyframes rio-shimmer-rtl {
+  100% { transform: translateX(-100%); }
+}
+
+/* שורות הטבלה והכרטיסים נכנסים בהדרגה, כדי שהשלד לא ייעלם בבת אחת. */
+.rio-skeleton-stagger > * {
+  opacity: 0;
+  animation: rio-fade-in var(--duration-slow) var(--ease-out) forwards;
+}
+
+/* ---------- מעברי מסך ---------- */
+
+/* fill-mode הוא backwards ולא both בכוונה: ב-forwards הדפדפן משאיר transform
+   מחושב על האלמנט גם אחרי שהאנימציה נגמרה, וזה הופך אותו לבלוק מכיל של כל
+   position:fixed שבתוכו — מה שהיה שובר את מיקומן של החלוניות. */
+.rio-screen {
+  animation: rio-screen-in var(--duration-slow) var(--ease-emphasis) backwards;
+}
+
+@keyframes rio-screen-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes rio-fade-in {
+  to { opacity: 1; }
+}
+
+/* ---------- העדפת תנועה מופחתת ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .rio-skeleton::after,
+  .rio-skeleton-stagger > *,
+  .rio-screen {
+    animation: none;
+  }
+  .rio-skeleton-stagger > * { opacity: 1; }
+}

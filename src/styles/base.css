@@ -1,0 +1,19 @@
+
+/* Minimal base layer: family binding only, mirroring the source project's
+   @layer base rule. Nothing else is reset globally. */
+body{font-family:var(--font-body);color:var(--text-primary);background:var(--background)}
+h1,h2,h3,h4,h5,h6{font-family:var(--font-heading)}
+a{color:var(--link);text-decoration:none}
+a:hover{color:var(--primary-hover);text-decoration:underline;text-underline-offset:4px}
+[dir="rtl"]{text-align:right}
+.ds-tabular{font-variant-numeric:tabular-nums}
+
+
+
+  body { margin: 0; }
+  * { box-sizing: border-box; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { color: var(--primary-hover); text-decoration: underline; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--tw-gray-300); border-radius: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
