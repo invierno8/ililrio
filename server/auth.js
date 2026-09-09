@@ -90,29 +90,27 @@ export function verify(token) {
 }
 
 /**
- * מחזיר { user, token } או { error }. roster הוא רשימת המעירים שהמנהלים
- * הוסיפו — מי שאינו מנהל ואינו שם, אינו נכנס.
+ * מחזיר { user, token } או { error }.
+ *
+ * הסיסמה היא גם הזהות — בדיוק כמו ב-commando, שם הכניסה היא שדה סיסמה יחיד.
+ * כל מעיר מקבל סיסמה משלו, והשרת יודע לפיה מי נכנס; אין שדה שם למלא.
  */
-export function login(name, password, roster) {
-  const clean = String(name || '').trim();
-  if (!clean) return { error: 'Name required' };
+export function login(password, roster) {
   if (!SECRET) return { error: 'Service misconfigured: JYNX_SESSION_SECRET is missing' };
+  const given = String(password || '');
+  if (!given) return { error: 'Password required' };
 
-  const key = clean.toLowerCase();
-  let user;
-
-  if (isAdminName(key)) {
-    if (!samePassword(password, ADMINS[key])) return { error: 'Wrong password' };
-    user = { id: userIdFor(key), name: clean, isAdmin: true };
-  } else {
-    const known = roster.find((u) => u.name.trim().toLowerCase() === key);
-    if (!known) return { error: 'No Jynx user by that name — ask Tom or ilil to add you' };
-    if (!verifyHashed(password, known)) return { error: 'Wrong password' };
-    user = { id: known.id, name: known.name, isAdmin: false };
+  const adminName = ADMIN_NAMES.find((n) => samePassword(given, ADMINS[n]));
+  if (adminName) {
+    const user = { id: userIdFor(adminName), name: adminName, isAdmin: true };
+    return { user, token: sign({ ...user, exp: Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000 }) };
   }
 
-  const token = sign({ ...user, exp: Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000 });
-  return { user, token };
+  const known = roster.find((u) => !u.isAdmin && verifyHashed(given, u));
+  if (!known) return { error: 'Wrong password' };
+
+  const user = { id: known.id, name: known.name, isAdmin: false };
+  return { user, token: sign({ ...user, exp: Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000 }) };
 }
 
 /** middleware: דורש סשן תקין, ותולה אותו על req.user. */

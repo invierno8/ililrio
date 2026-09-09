@@ -77,8 +77,8 @@ app.get('/api/jynx/health', (req, res) => {
 });
 
 app.post('/api/jynx/login', async (req, res) => {
-  const { name, password } = req.body || {};
-  const result = login(name, password, users);
+  const { password } = req.body || {};
+  const result = login(password, users);
   if (result.error) return res.status(401).json({ error: result.error });
   await touchUser(result.user);
   return res.json(result);

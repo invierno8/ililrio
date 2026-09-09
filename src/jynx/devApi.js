@@ -34,7 +34,11 @@ async function call(path, options = {}) {
   });
   if (res.status === 401) {
     writeToken('');
-    throw Object.assign(new Error('Session expired — sign in again'), { code: 401 });
+    // הודעת השרת עדיפה כשהיא קיימת: "Wrong password" בכניסה כושלת אינו אותו
+    // דבר כמו סשן שפג באמצע עבודה, ולהציג את השני במקום הראשון פשוט מבלבל.
+    let message = 'Session expired — sign in again';
+    try { message = (await res.json()).error || message; } catch { /* not JSON */ }
+    throw Object.assign(new Error(message), { code: 401 });
   }
   if (!res.ok) {
     let message = `Request failed (${res.status})`;
@@ -44,8 +48,9 @@ async function call(path, options = {}) {
   return res.status === 204 ? null : res.json();
 }
 
-export async function jynxLogin(name, password) {
-  const out = await call('/api/jynx/login', { method: 'POST', body: JSON.stringify({ name, password }) });
+/** הסיסמה היא הזהות — שדה אחד, כמו ב-commando. */
+export async function jynxLogin(password) {
+  const out = await call('/api/jynx/login', { method: 'POST', body: JSON.stringify({ password }) });
   writeToken(out.token);
   return out.user;
 }

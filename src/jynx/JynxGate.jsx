@@ -51,11 +51,10 @@ export default function JynxGate() {
   const [comments, setComments] = useState([]);
 
   const [loginOpen, setLoginOpen] = useState(false);
-  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [loginPhase, setLoginPhase] = useState('idle'); // idle | thinking | success | error
   const [error, setError] = useState('');
-  const [nameFocused, setNameFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const [pendingWelcomeName, setPendingWelcomeName] = useState('');
 
   const [toolbarOpen, setToolbarOpen] = useState(false);
@@ -137,11 +136,11 @@ export default function JynxGate() {
   }
 
   async function login() {
-    if (!name.trim() || loginPhase === 'thinking') return;
+    if (!password.trim() || loginPhase === 'thinking') return;
     setLoginPhase('thinking');
     setError('');
     try {
-      const me = await jynxLogin(name.trim(), password);
+      const me = await jynxLogin(password);
       setPendingWelcomeName(me.name);
       setLoginPhase('success');
       setTimeout(() => {
@@ -219,27 +218,18 @@ export default function JynxGate() {
             ) : (
               <>
                 <label className="env-strip-identity">
-                  <span>Name</span>
-                  <input
-                    value={name} autoFocus
-                    onChange={(e) => { setName(e.target.value); if (loginPhase === 'error') setLoginPhase('idle'); }}
-                    onKeyDown={(e) => e.key === 'Enter' && login()}
-                    onFocus={() => setNameFocused(true)}
-                    onBlur={() => setNameFocused(false)}
-                    disabled={loginPhase === 'thinking' || loginPhase === 'success'}
-                  />
-                </label>
-                <label className="env-strip-identity">
                   <span>Password</span>
                   <input
-                    type="password" value={password}
+                    type="password" value={password} autoFocus
                     onChange={(e) => { setPassword(e.target.value); if (loginPhase === 'error') setLoginPhase('idle'); }}
                     onKeyDown={(e) => e.key === 'Enter' && login()}
+                    onFocus={() => setPasswordFocused(true)}
+                    onBlur={() => setPasswordFocused(false)}
                     disabled={loginPhase === 'thinking' || loginPhase === 'success'}
                   />
                 </label>
                 {error && <div className="dev-login-error">{error}</div>}
-                <button type="button" className="dev-login-submit" onClick={login} disabled={!name.trim() || loginPhase === 'thinking' || loginPhase === 'success'}>
+                <button type="button" className="dev-login-submit" onClick={login} disabled={!password.trim() || loginPhase === 'thinking' || loginPhase === 'success'}>
                   {loginPhase === 'thinking' ? <Loader2 size={13} className="dev-login-spinner" /> : 'Sign in'}
                 </button>
               </>
@@ -256,7 +246,7 @@ export default function JynxGate() {
         >
           <Lock size={13} />
           <JynxBubbleContent
-            mood={loginPhase !== 'idle' ? loginPhase : (nameFocused ? 'typing' : 'idle')}
+            mood={loginPhase !== 'idle' ? loginPhase : (passwordFocused ? 'typing' : 'idle')}
             welcomeName={pendingWelcomeName}
             errorText={error}
           />
