@@ -46,6 +46,7 @@ export default function HotkeyHint({ modifier, onChange }) {
     <div className="jynx-hotkey-hint jynx-chrome jynx-ui" ref={wrapRef}>
       <span className="jynx-hotkey-hint-text">
         Hold {spec.symbol} and click any element to comment
+        {modifier !== 'shift' && <><br />Add ⇧ to comment on the block instead of the text</>}
       </span>
       <button
         type="button"

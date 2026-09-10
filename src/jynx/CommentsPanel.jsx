@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { MessageSquare, X, Search, CheckCircle2, Pencil, Trash2, CornerDownRight } from 'lucide-react';
 import { elementForComment } from './useHoverTarget.js';
+import DrawingOverlay from './DrawingOverlay.jsx';
 
 /* ==================================================================
    פאנל ההערות. התוכן והפילטרים הם של commando (overlay/CommentsPanel.jsx)
@@ -131,6 +132,7 @@ export default function CommentsPanel({ comments, route, currentUser, hotkeySymb
                   onClick={() => !isEditing && !otherPage && jumpTo(a)}
                 >
                   <span className="comments-sidebar-item-target">
+                    {a.targetKind === 'text' && <span className="comments-kind-badge">text</span>}
                     {otherPage && <span className="comments-route-badge">{a.route}</span>}
                     {a.targetLabel}
                     {a.resolved && <span className="comments-done-badge"><CheckCircle2 size={10} /> Done</span>}
@@ -171,6 +173,8 @@ export default function CommentsPanel({ comments, route, currentUser, hotkeySymb
                     </p>
                   )}
 
+                  {a.drawing && <span className="comments-drawing-badge">✏️ drawing — hover to see it on the page</span>}
+                  {hoveredId === a.id && a.drawing && <DrawingOverlay drawing={a.drawing} />}
                   {replies.length > 0 && (
                     <div className="comments-reply-list">
                       {replies.map((r) => (

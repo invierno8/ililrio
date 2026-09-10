@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useHoverTarget, labelForElement, pathForElement, findTarget } from './useHoverTarget.js';
+import { useHoverTarget, labelForElement, pathForElement, findTarget, kindForElement } from './useHoverTarget.js';
 import AnnotationPopover from './AnnotationPopover.jsx';
 import AnnotationMarkers from './AnnotationMarkers.jsx';
+import DrawingCanvas from './DrawingCanvas.jsx';
+import DrawingOverlay from './DrawingOverlay.jsx';
 import { hasHotkey, useHotkeyHeld, MODIFIERS } from './hotkey.js';
 
 /* ==================================================================
@@ -25,12 +27,16 @@ function parseSecondaryTargetsFromComment(comment) {
   return found.slice(0, 10);
 }
 
-export default function DevOverlay({ hoverOn, markersOn, route, comments, currentUser, hotkey, onSubmit, onResolve, onDelete }) {
+export default function DevOverlay({ hoverOn, markersOn, drawMode, drawColor, route, comments, currentUser, hotkey, onSubmit, onResolve, onDelete }) {
   // ההילה מופיעה רק כל עוד המקש מוחזק: מחזיקים, עוברים מעל, לוחצים ומעירים.
   // בלי זה כל תנועת עכבר על העמוד הייתה מציירת מסגרת, גם כשרק קוראים אותו.
   // העין נשארת המתג העליון — כבויה, אין הילה גם כשמחזיקים.
   const hotkeyHeld = useHotkeyHeld(hotkey);
-  const target = useHoverTarget(hoverOn && hotkeyHeld, true);
+  // Shift מרחיב מהטקסט אל המכל שמסביבו. אם המשתמש בחר דווקא ב-Shift כמקש
+  // הקיצור, אין הרחבה — אחרת אי אפשר היה להעיר על טקסט בכלל.
+  const shiftHeld = useHotkeyHeld('shift');
+  const preferBlock = hotkey !== 'shift' && shiftHeld;
+  const target = useHoverTarget(hoverOn && hotkeyHeld, true, preferBlock);
   const [popover, setPopover] = useState(null); // { x, y, label, path, secondaryTargets: [] } | null
   const isJynxHover = !!target?.closest('.jynx-chrome');
   // "בוחר יעד משני" הוא פשוט: יש popover פתוח. אין שלב-ביניים של כפתור
@@ -50,12 +56,17 @@ export default function DevOverlay({ hoverOn, markersOn, route, comments, curren
     function onClickCapture(e) {
       const el = realElementAtPoint(e.clientX, e.clientY);
 
+      // במצב ציור, גרירה עם המקש היא שרטוט — והקליק שנגרר אחריה שייך לציור.
+      // בלי החרגה כאן הוא היה פותח קופסת הערה בעצמו, מסיים את הסשן אחרי
+      // שרטוט אחד, ופותח אותה בלי הציור שכבר צויר.
+      if (drawMode && !popover) return;
+
       if (popover) {
         if (!hasHotkey(e, hotkey)) return;
         if (!el) return;
         e.preventDefault();
         e.stopPropagation();
-        const lbl = labelForElement(findTarget(el));
+        const lbl = labelForElement(findTarget(el, preferBlock));
         setPopover((p) => {
           if (!p) return p;
           if (p.secondaryTargets.includes(lbl) || lbl === p.label) return p;
@@ -68,12 +79,13 @@ export default function DevOverlay({ hoverOn, markersOn, route, comments, curren
       if (!el) return;
       e.preventDefault();
       e.stopPropagation();
-      const resolved = findTarget(el);
+      const resolved = findTarget(el, preferBlock);
       setPopover({
         x: e.clientX,
         y: e.clientY,
         label: labelForElement(resolved),
         path: pathForElement(resolved),
+        kind: kindForElement(resolved),
         secondaryTargets: [],
       });
     }
@@ -86,17 +98,34 @@ export default function DevOverlay({ hoverOn, markersOn, route, comments, curren
       window.removeEventListener('click', onClickCapture, true);
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [target, popover, hotkey]);
+  }, [target, popover, hotkey, drawMode, preferBlock]);
 
-  const rect = hoverOn && hotkeyHeld ? target?.getBoundingClientRect() : null;
+  // בזמן ציור אין הילה: היד עסוקה בשרטוט, ומסגרת שרודפת אחרי הסמן רק מפריעה.
+  const rect = hoverOn && hotkeyHeld && !drawMode ? target?.getBoundingClientRect() : null;
+
+  /** ציור שהושלם פותח את אותה קופסה בדיוק, רק עם הציור מצורף אליה. */
+  function handleDrawingComplete({ drawing, targetEl, screenX, screenY }) {
+    const resolved = targetEl ? findTarget(targetEl) : document.body;
+    setPopover({
+      x: screenX,
+      y: screenY,
+      label: labelForElement(resolved),
+      path: pathForElement(resolved),
+      kind: kindForElement(resolved),
+      secondaryTargets: [],
+      drawing,
+    });
+  }
 
   async function submit(comment) {
     await onSubmit({
       route,
       targetLabel: popover.label,
       targetPath: popover.path,
+      targetKind: popover.kind,
       comment,
       secondaryTargets: parseSecondaryTargetsFromComment(comment),
+      drawing: popover.drawing || null,
     });
     setPopover(null);
   }
@@ -113,9 +142,13 @@ export default function DevOverlay({ hoverOn, markersOn, route, comments, curren
         >
           {/* מה בדיוק ייתפס כשלוחצים. בלי זה ההילה מראה גבול אבל לא אומרת על
               מה מעירים — וזה בדיוק מה שנשמר עם ההערה כ-targetLabel. */}
-          <span className={'dev-overlay-highlight-label' + (rect.top < 26 ? ' dev-overlay-highlight-label-below' : '')}>{labelForElement(target)}</span>
+          <span className={'dev-overlay-highlight-label' + (rect.top < 26 ? ' dev-overlay-highlight-label-below' : '')}>
+            <span className="dev-overlay-highlight-kind">{kindForElement(target) === 'text' ? 'text' : 'block'}</span>
+            {labelForElement(target)}
+          </span>
         </div>
       )}
+      {popover?.drawing && <DrawingOverlay drawing={popover.drawing} />}
       {popover && (
         <AnnotationPopover
           x={popover.x}
@@ -123,10 +156,13 @@ export default function DevOverlay({ hoverOn, markersOn, route, comments, curren
           label={popover.label}
           secondaryTargets={popover.secondaryTargets}
           hotkeySymbol={(MODIFIERS[hotkey] || MODIFIERS.ctrl).symbol}
+          kind={popover.kind}
+          hasDrawing={!!popover.drawing}
           onCancel={() => setPopover(null)}
           onSubmit={submit}
         />
       )}
+      <DrawingCanvas active={drawMode && !popover} hotkey={hotkey} color={drawColor} onComplete={handleDrawingComplete} />
       <AnnotationMarkers
         active={markersOn}
         comments={comments.filter((c) => c.route === route)}

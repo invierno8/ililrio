@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Lock, Eye, EyeOff, MessageSquare, GripVertical, GripHorizontal, X, Loader2, Target, Users } from 'lucide-react';
+import { Lock, Eye, EyeOff, MessageSquare, GripVertical, GripHorizontal, X, Loader2, Target, Users, Pencil } from 'lucide-react';
 import { useRio } from '../store/index.js';
 import { useIsNarrow } from '../components/DesktopOnly.jsx';
 import { jynxConfigured, jynxLogin, jynxLogout, fetchMe, fetchComments, submitAnnotation, editAnnotation, resolveAnnotation, replyToAnnotation, deleteAnnotation } from './devApi.js';
@@ -22,12 +22,21 @@ import './theme.css';
    שם. אין מצב "נשמר אצלי בדפדפן" — החוט משותף או שאינו קיים.
    ================================================================== */
 
-const DEFAULT_TOOLBAR_ORDER = ['overlay', 'comments', 'markers', 'users'];
+const DEFAULT_TOOLBAR_ORDER = ['overlay', 'draw', 'comments', 'markers', 'users'];
+
+/** ארבע המשבצות של לוח הציור, כמו ב-commando. */
+const JYNX_DRAW_COLORS = [
+  { name: 'Jynx purple', value: '#9B82FF' },
+  { name: 'Red', value: '#E85A4D' },
+  { name: 'Amber', value: '#E6A93C' },
+  { name: 'Green', value: '#35E08F' },
+];
+const DRAW_COLOR_KEY = 'jynx-draw-color';
 const TOOLBAR_ORIENTATION_KEY = 'jynx-toolbar-orientation';
 const OVERLAY_ON_KEY = 'jynx-overlay-on';
 const MARKERS_ON_KEY = 'jynx-markers-on';
 
-const SHORTCUT_LABELS = { overlay: 'Hover overlay', comments: 'Comments panel', markers: 'Status dots', users: 'Users' };
+const SHORTCUT_LABELS = { overlay: 'Hover overlay', draw: 'Drawing', comments: 'Comments panel', markers: 'Status dots', users: 'Users' };
 const POLL_MS = 6000;
 
 function loadFlag(key, fallback) {
@@ -67,10 +76,15 @@ export default function JynxGate() {
   const [markersOn, setMarkersOn] = useState(() => loadFlag(MARKERS_ON_KEY, true));
   const [commentsOn, setCommentsOn] = useState(false);
   const [usersOpen, setUsersOpen] = useState(false);
+  const [drawMode, setDrawMode] = useState(false);
+  const [drawColor, setDrawColor] = useState(() => {
+    try { return localStorage.getItem(DRAW_COLOR_KEY) || JYNX_DRAW_COLORS[0].value; } catch { return JYNX_DRAW_COLORS[0].value; }
+  });
   // ההעדפה נשמרת לפי המשתמש, לא לפי הדפדפן — מי שמחליף מקש משנה רק לעצמו.
   const [hotkey, setHotkey] = useHotkeyModifier(user?.id);
 
   const lockedFab = useDraggableFab('jynx-locked-fab-pos');
+  const drawPaletteFab = useDraggableFab('jynx-draw-palette-pos', { right: 20, bottom: 130 });
   const toolbarFab = useDraggableFab('jynx-toolbar-pos');
   const loginPanelRef = useRef(null);
   useKeepInViewport(loginPanelRef, loginOpen, 8, [error]);
@@ -128,6 +142,7 @@ export default function JynxGate() {
       if (id === 'comments') setCommentsOn((v) => !v);
       if (id === 'markers') setMarkersOn((v) => !v);
       if (id === 'users') setUsersOpen((v) => !v);
+      if (id === 'draw') setDrawMode((v) => !v);
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
@@ -286,6 +301,11 @@ export default function JynxGate() {
         <Target size={13} />
       </button>
     ),
+    draw: (
+      <button type="button" className={'dev-toolbar-icon-btn' + (drawMode ? ' active' : '')} data-devblock="jynx-toolbar-draw-toggle" onClick={() => setDrawMode((v) => !v)} title={drawMode ? 'Turn off drawing' : `Turn on drawing — hold ${MODIFIERS[hotkey].symbol} and drag on the page`}>
+        <Pencil size={13} />
+      </button>
+    ),
     users: user.isAdmin ? (
       <button type="button" className={'dev-toolbar-icon-btn' + (usersOpen ? ' active' : '')} data-devblock="jynx-toolbar-users-toggle" onClick={() => setUsersOpen((v) => !v)} title="Who can comment — admins only">
         <Users size={13} />
@@ -298,6 +318,8 @@ export default function JynxGate() {
       <DevOverlay
         hoverOn={overlayOn}
         markersOn={markersOn}
+        drawMode={drawMode}
+        drawColor={drawColor}
         route={route}
         comments={comments}
         currentUser={user}
@@ -324,6 +346,29 @@ export default function JynxGate() {
 
       {usersOpen && user.isAdmin && <UsersPanel onClose={() => setUsersOpen(false)} />}
 
+      {drawMode && (
+        <div
+          ref={drawPaletteFab.sizeRef}
+          className="jynx-draw-palette jynx-chrome jynx-ui"
+          style={{ right: drawPaletteFab.pos.right, bottom: drawPaletteFab.pos.bottom }}
+          {...drawPaletteFab.dragHandlers}
+          title={`Hold ${MODIFIERS[hotkey].symbol} and drag on the page to draw · release and drag again to add another stroke · Esc to finish and comment`}
+        >
+          {JYNX_DRAW_COLORS.map((c) => (
+            <button
+              key={c.value}
+              type="button"
+              className={'jynx-draw-swatch' + (drawColor === c.value ? ' active' : '')}
+              style={{ background: c.value }}
+              onClick={() => {
+                setDrawColor(c.value);
+                try { localStorage.setItem(DRAW_COLOR_KEY, c.value); } catch { /* אחסון חסום */ }
+              }}
+              title={c.name}
+            />
+          ))}
+        </div>
+      )}
       {toolbarOpen ? (
         <div className="dev-fab-toolbar-wrap" style={{ right: toolbarFab.pos.right, bottom: toolbarFab.pos.bottom }}>
           <div

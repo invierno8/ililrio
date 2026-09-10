@@ -13,7 +13,7 @@ import { useDraggableFab } from './useDraggableFab.js';
    השליחה, לא ממערך נפרד, כך שהטקסט הוא תמיד מקור האמת היחיד.
 
    גרירה: useDraggableFab — אותו hook בדיוק כמו הפאנל והסרגל. */
-export default function AnnotationPopover({ x, y, label, secondaryTargets, hotkeySymbol = 'Ctrl', onCancel, onSubmit }) {
+export default function AnnotationPopover({ x, y, label, secondaryTargets, hotkeySymbol = 'Ctrl', kind = 'block', hasDrawing = false, onCancel, onSubmit }) {
   const [comment, setComment] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
@@ -78,13 +78,19 @@ export default function AnnotationPopover({ x, y, label, secondaryTargets, hotke
         <span className="dev-annotate-popover-grip" {...dragHandlers} title="Drag to move">
           <GripVertical size={13} />
         </span>
-        <div className="dev-annotate-popover-label" title={label}>{label}</div>
+        <div className="dev-annotate-popover-label" title={label}>
+          <span className="dev-annotate-popover-kind">{kind === 'text' ? 'text' : 'block'}</span>
+          {label}
+        </div>
       </div>
+      {hasDrawing && (
+        <div className="dev-annotate-popover-drawing-hint">✏️ Attached to your drawing — it stays saved with this comment</div>
+      )}
       <textarea
         ref={textareaRef}
         autoFocus
         rows={3}
-        placeholder="What needs to change/be checked here? (e.g. move this to →)"
+        placeholder={kind === 'text' ? 'What should this text say instead?' : 'What needs to change/be checked here? (e.g. move this to →)'}
         value={comment}
         onChange={(e) => setComment(e.target.value)}
       />

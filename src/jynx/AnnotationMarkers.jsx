@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { CheckCircle2 } from 'lucide-react';
 import { useKeepInViewport } from './useKeepInViewport.js';
 import { elementForComment } from './useHoverTarget.js';
+import DrawingOverlay from './DrawingOverlay.jsx';
 
 /* ==================================================================
    סימון קבוע (לא תלוי-הובר) לכל הערה על המסך הנוכחי — נקודה אחת לאלמנט,
@@ -143,6 +144,7 @@ function MarkerDot({ list, rect, open, currentUserId, isAdmin, onToggle, onResol
               style={{ top: r.top, left: r.left, width: r.width, height: r.height }}
             />
           ))}
+          {list.filter((a) => a.drawing).map((a) => <DrawingOverlay key={a.id} drawing={a.drawing} />)}
         </div>
       )}
       <div
@@ -169,6 +171,7 @@ function MarkerDot({ list, rect, open, currentUserId, isAdmin, onToggle, onResol
                   {a.resolved && <span className="admin-marker-done-badge"><CheckCircle2 size={10} /> Done</span>}
                 </div>
                 <p className="admin-marker-detail-comment">{a.comment}</p>
+                {a.drawing && <span className="comments-drawing-badge">✏️ drawing</span>}
                 {(a.replies || []).map((r) => (
                   <div key={r.id} className="comments-reply">
                     <p className="comments-reply-body">{r.body}</p>

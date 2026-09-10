@@ -115,7 +115,7 @@ app.get('/api/jynx/comments', requireUser, (req, res) => {
 });
 
 app.post('/api/jynx/comments', requireUser, async (req, res) => {
-  const { route, targetLabel, targetPath, comment, secondaryTargets } = req.body || {};
+  const { route, targetLabel, targetPath, targetKind, comment, secondaryTargets, drawing } = req.body || {};
   if (!comment || !String(comment).trim()) return res.status(400).json({ error: 'Comment is empty' });
 
   const saved = {
@@ -126,7 +126,9 @@ app.post('/api/jynx/comments', requireUser, async (req, res) => {
     route: route || '',
     targetLabel: targetLabel || '',
     targetPath: targetPath || '',
+    targetKind: targetKind === 'text' ? 'text' : 'block',
     secondaryTargets: Array.isArray(secondaryTargets) ? secondaryTargets.slice(0, 10) : [],
+    drawing: drawing && Array.isArray(drawing.strokes) ? { strokes: drawing.strokes.slice(0, 40), color: String(drawing.color || '').slice(0, 40) } : null,
     comment: String(comment).slice(0, 4000),
     resolved: false,
     replies: [],

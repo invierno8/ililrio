@@ -38,13 +38,55 @@ export function isJynxChrome(el) {
   return !!(el && el.closest && el.closest('.jynx-chrome'));
 }
 
-export function findTarget(el) {
+/** תגיות שהתוכן שלהן הוא טקסט זורם, גם כשיש בפנים הדגשה או קישור. */
+const INLINE_TAGS = new Set(['SPAN', 'B', 'I', 'EM', 'STRONG', 'SMALL', 'BDI', 'BDO', 'BR', 'A', 'CODE', 'MARK', 'SUP', 'SUB', 'U', 'S', 'ABBR', 'TIME']);
+const NEVER_TEXT_TARGET = new Set(['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA', 'OPTION', 'LABEL', 'SVG', 'PATH']);
+
+/**
+ * פריט תוכן: אלמנט שמה שיש בו הוא טקסט — כותרת, פסקה, תא בטבלה, שורת ערך —
+ * ולא מכל של אלמנטים אחרים. עליו אפשר להעיר על הניסוח עצמו, בנפרד מהכרטיס
+ * שמסביבו.
+ *
+ * פקדים אינם נחשבים טקסט: כפתור או שדה הם דבר שלוחצים עליו, וההערה עליהם
+ * שייכת לפקד כולו — ולכן הם נתפסים במעבר של רמזי המחלקות, לא כאן.
+ */
+export function isTextTarget(el) {
+  if (!el || el.nodeType !== 1) return false;
+  if (NEVER_TEXT_TARGET.has(el.tagName)) return false;
+  if (el.closest('button, a, input, select, textarea, label')) return false;
+  const text = (el.textContent || '').trim();
+  if (!text) return false;
+  // כל צאצא חייב להיות טקסט או הדגשה — אחרת זה מכל, לא פריט תוכן.
+  for (const child of el.children) {
+    if (!INLINE_TAGS.has(child.tagName)) return false;
+  }
+  const rect = el.getBoundingClientRect();
+  return rect.width > 8 && rect.height > 8;
+}
+
+/** האם היעד הוא טקסט או מכל — נשמר עם ההערה ומוצג על ההילה. */
+export function kindForElement(el) {
+  return isTextTarget(el) ? 'text' : 'block';
+}
+
+export function findTarget(el, preferBlock = false) {
   let node = el;
   while (node && node !== document.body) {
     if (node.dataset && node.dataset.devblock) return node;
     node = node.parentElement;
   }
-  // מעבר שני, נפרד: רכיב של מערכת העיצוב מנצח כל flex פנימי שבדרך אליו.
+  // טקסט שמתחת לסמן מנצח: מי שמצביע על משפט מתכוון להעיר על המשפט, לא על
+  // הכרטיס שמסביבו. אם הצומת עצמו אינו טקסט אבל האב הישיר כן (למשל ריחוף על
+  // <b> בתוך פסקה), עולים צעד אחד — לא יותר, כדי לא לבלוע את המכל.
+  //
+  // preferBlock (Shift מוחזק) מדלג על הכלל הזה: כמעט כל פינה בעמוד מכילה
+  // טקסט כלשהו, ובלי דרך לוותר עליו אי אפשר היה להעיר על כרטיס שלם.
+  if (!preferBlock) {
+    if (isTextTarget(el)) return el;
+    if (el && el.parentElement && isTextTarget(el.parentElement)) return el.parentElement;
+  }
+
+  // מעבר נפרד: רכיב של מערכת העיצוב מנצח כל flex פנימי שבדרך אליו.
   node = el;
   while (node && node !== document.body) {
     if (hasHintClass(node)) return node;
@@ -118,7 +160,7 @@ export function elementForComment(comment) {
   return byPath;
 }
 
-export function useHoverTarget(active, allowJynxChrome) {
+export function useHoverTarget(active, allowJynxChrome, preferBlock = false) {
   const [target, setTarget] = useState(null);
   const rafRef = useRef(null);
 
@@ -140,7 +182,7 @@ export function useHoverTarget(active, allowJynxChrome) {
           setTarget(null);
           return;
         }
-        setTarget(findTarget(el));
+        setTarget(findTarget(el, preferBlock));
       });
     }
     window.addEventListener('mousemove', onMove);
@@ -154,7 +196,7 @@ export function useHoverTarget(active, allowJynxChrome) {
         rafRef.current = null;
       }
     };
-  }, [active, allowJynxChrome]);
+  }, [active, allowJynxChrome, preferBlock]);
 
   return target;
 }
