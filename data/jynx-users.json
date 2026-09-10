@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-09T21:54:49.560Z",
+  "updatedAt": "2026-09-10T09:56:31.195Z",
   "users": [
     {
       "id": "u-e1608f75c5",
       "name": "tom",
       "isAdmin": true,
       "firstSeen": "2026-09-09T21:00:16.795Z",
-      "lastSeen": "2026-09-09T21:00:43.884Z"
+      "lastSeen": "2026-09-10T09:56:31.195Z"
     },
     {
       "id": "u-fb97eb31da",
