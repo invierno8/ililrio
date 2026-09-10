@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T11:19:19.428Z",
+  "updatedAt": "2026-09-10T11:19:24.956Z",
   "comments": [
     {
       "id": "c-e8337698",
@@ -102,22 +102,6 @@
       "secondaryTargets": [],
       "drawing": null,
       "comment": "אצווה?",
-      "resolved": false,
-      "replies": []
-    },
-    {
-      "id": "c-5c4fbc22",
-      "createdAt": "2026-09-10T11:19:19.428Z",
-      "authorId": "u-fb97eb31da",
-      "authorName": "ilil",
-      "route": "P1:catalog",
-      "routeItemId": null,
-      "targetLabel": "מערכת מיגון רכב קל",
-      "targetPath": "0/1/1/0/1/0/1/1/0",
-      "targetKind": "text",
-      "secondaryTargets": [],
-      "drawing": null,
-      "comment": "HOVER-CHECK-1789039159156",
       "resolved": false,
       "replies": []
     }
