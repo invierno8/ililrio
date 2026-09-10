@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T10:58:06.419Z",
+  "updatedAt": "2026-09-10T10:58:21.348Z",
   "comments": [
     {
       "id": "c-e8337698",
@@ -16,15 +16,17 @@
       "replies": []
     },
     {
-      "id": "c-23e1960e",
-      "createdAt": "2026-09-10T10:58:06.419Z",
+      "id": "c-0d4b7ec0",
+      "createdAt": "2026-09-10T10:58:21.348Z",
       "authorId": "u-682f158037",
       "authorName": "rio",
       "route": "P2:catalog",
-      "targetLabel": "זרוע אמל\"ח",
-      "targetPath": "0/1/1/0/1/1/1/0/0",
+      "targetLabel": "ערכי צירי הסינון, רמות הסיווג, סוגי המסמכים ומצאי שדות המאפי…",
+      "targetPath": "0/1/0",
+      "targetKind": "block",
       "secondaryTargets": [],
-      "comment": "זרוע אמל״ח? תיקון של rtl?",
+      "drawing": null,
+      "comment": "לא מובן מה זה",
       "resolved": false,
       "replies": []
     }
