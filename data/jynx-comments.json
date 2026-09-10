@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T11:43:47.463Z",
+  "updatedAt": "2026-09-10T11:45:13.109Z",
   "comments": [
     {
       "id": "c-e8337698",
@@ -102,6 +102,23 @@
       "secondaryTargets": [],
       "drawing": null,
       "comment": "אצווה?",
+      "resolved": false,
+      "replies": []
+    },
+    {
+      "id": "c-f8a41034",
+      "createdAt": "2026-09-10T11:45:13.109Z",
+      "authorId": "u-c313213c35",
+      "authorName": "Jynx",
+      "route": "catalog",
+      "routePersona": "P1",
+      "routeItemId": null,
+      "targetLabel": "תמונה מפא\"ת זמין מערכת מיגון רכב קל מערכת הגנה משולבת לרכבים…",
+      "targetPath": "0/1/1/0/1/0",
+      "targetKind": "block",
+      "secondaryTargets": [],
+      "drawing": null,
+      "comment": "התיאור בכרטיס מוגבל לשורה אחת עם שלוש נקודות, ולכן כמעט כל כרטיס ברשת נגמר באמצע משפט. הכותרת ממילא שומרת שתי שורות בגובה קבוע, אז המקום קיים: או לתת גם לתיאור שתי שורות, או לקצר אותו לכדי משפט אחד שנכנס בשלמותו. כרגע העין נעצרת על החיתוך במקום על התוכן.",
       "resolved": false,
       "replies": []
     }
