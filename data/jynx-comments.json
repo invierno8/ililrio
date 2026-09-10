@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T11:43:33.906Z",
+  "updatedAt": "2026-09-10T11:43:36.984Z",
   "comments": [
     {
       "id": "c-e8337698",
@@ -102,23 +102,6 @@
       "secondaryTargets": [],
       "drawing": null,
       "comment": "אצווה?",
-      "resolved": false,
-      "replies": []
-    },
-    {
-      "id": "c-4810af62",
-      "createdAt": "2026-09-10T11:33:47.662Z",
-      "authorId": "u-c313213c35",
-      "authorName": "Jynx",
-      "route": "item-detail",
-      "routePersona": "P1",
-      "routeItemId": 1,
-      "targetLabel": "בעל הפריט",
-      "targetPath": "0/1/1/0/1/0/0/6/1/0",
-      "targetKind": "text",
-      "secondaryTargets": [],
-      "drawing": null,
-      "comment": "לחיצה על שם בעל הפריט פותחת \"אימייל: placeholder@mil.example · טלפון: 03-0000000\". בהדגמה מול משתמשים אמיתיים הערכים האלה נקראים כמו נתון אמיתי, ומישהו ינסה לפנות אליהם. עדיף להשאיר את השורה ריקה עם \"טרם הוזן\", או לסמן במפורש שזו דוגמה.",
       "resolved": false,
       "replies": []
     },
