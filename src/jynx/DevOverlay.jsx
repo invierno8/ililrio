@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useHoverTarget, labelForElement, pathForElement, findTarget, kindForElement } from './useHoverTarget.js';
+import { useHoverTarget, labelForElement, pathForElement, findTarget, kindForElement, disabledControlAt } from './useHoverTarget.js';
 import AnnotationPopover from './AnnotationPopover.jsx';
 import AnnotationMarkers from './AnnotationMarkers.jsx';
 import DrawingCanvas from './DrawingCanvas.jsx';
@@ -51,6 +51,9 @@ export default function DevOverlay({ hoverOn, markersOn, drawMode, drawColor, ro
     // לקשר. elementFromPoint היה מחזיר את ה-popover עצמו (הכי עליון שם);
     // elementsFromPoint נותן את כל הערימה, ומדלגים על שכבות ה-overlay.
     function realElementAtPoint(x, y) {
+      // פקד מושבת קודם — ראו disabledControlAt: הדפדפן לא יחזיר אותו לבד.
+      const disabled = disabledControlAt(x, y);
+      if (disabled) return disabled;
       const stack = document.elementsFromPoint(x, y);
       return stack.find((n) => !n.closest('.dev-overlay-ignore')) || null;
     }

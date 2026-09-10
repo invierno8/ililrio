@@ -34,6 +34,23 @@ function hasHintClass(el) {
   return FALLBACK_CLASS_HINTS.some((c) => list.includes(c));
 }
 
+/**
+ * פקד מושבת אינו נראה כלל לבדיקת מיקום: מערכת העיצוב נותנת לו
+ * pointer-events:none, ולכן elementFromPoint מחזיר את המכל שמאחוריו. אבל
+ * כפתור אפור הוא בדיוק מה שרוצים להעיר עליו — "למה זה מושבת?" — ולכן מחפשים
+ * אותו לפי הקואורדינטות במקום לסמוך על בדיקת המיקום של הדפדפן.
+ */
+const DISABLED_CONTROLS = 'button:disabled, input:disabled, select:disabled, textarea:disabled, [aria-disabled="true"]';
+
+export function disabledControlAt(x, y) {
+  for (const el of document.querySelectorAll(DISABLED_CONTROLS)) {
+    if (el.closest('.jynx-chrome, .dev-overlay-ignore')) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width && r.height && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return el;
+  }
+  return null;
+}
+
 export function isJynxChrome(el) {
   return !!(el && el.closest && el.closest('.jynx-chrome'));
 }
@@ -81,6 +98,9 @@ export function findTarget(el, preferBlock = false) {
   //
   // preferBlock (Shift מוחזק) מדלג על הכלל הזה: כמעט כל פינה בעמוד מכילה
   // טקסט כלשהו, ובלי דרך לוותר עליו אי אפשר היה להעיר על כרטיס שלם.
+  // פקד מושבת הוא היעד עצמו: אין טעם לתפוס את המילה שבתוכו.
+  if (el && el.matches && el.matches(DISABLED_CONTROLS)) return el;
+
   if (!preferBlock) {
     if (isTextTarget(el)) return el;
     if (el && el.parentElement && isTextTarget(el.parentElement)) return el.parentElement;
@@ -173,7 +193,7 @@ export function useHoverTarget(active, allowJynxChrome, preferBlock = false) {
       if (rafRef.current) return;
       rafRef.current = requestAnimationFrame(() => {
         rafRef.current = null;
-        const el = document.elementFromPoint(e.clientX, e.clientY);
+        const el = disabledControlAt(e.clientX, e.clientY) || document.elementFromPoint(e.clientX, e.clientY);
         if (!el || el.closest('.dev-overlay-ignore')) {
           setTarget(null);
           return;
