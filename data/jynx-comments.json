@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T11:37:04.645Z",
+  "updatedAt": "2026-09-10T11:43:30.876Z",
   "comments": [
     {
       "id": "c-e8337698",
@@ -102,23 +102,6 @@
       "secondaryTargets": [],
       "drawing": null,
       "comment": "אצווה?",
-      "resolved": false,
-      "replies": []
-    },
-    {
-      "id": "c-88ac656a",
-      "createdAt": "2026-09-10T11:33:35.697Z",
-      "authorId": "u-c313213c35",
-      "authorName": "Jynx",
-      "route": "catalog",
-      "routePersona": "P1",
-      "routeItemId": null,
-      "targetLabel": "חיפוש",
-      "targetPath": "0/1/1/0/0/0/0",
-      "targetKind": "block",
-      "secondaryTargets": [],
-      "drawing": null,
-      "comment": "החיפוש בודק רק שם, גוף ותיאור. חיפוש לפי מק\"ט — למשל MG-1042 — או לפי תגית מחזיר \"לא נמצאו תוצאות\", אף שהמק\"ט הוא בדיוק מה שמזהה פריט מול קצין ההצטיידות ומופיע בכרטיס שלו. שווה להכניס מק\"ט ותגיות לאותו שדה חיפוש, אחרת המשתמש מסיק שהפריט לא קיים בקטלוג.",
       "resolved": false,
       "replies": []
     },
