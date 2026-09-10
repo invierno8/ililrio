@@ -1,7 +1,14 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T12:40:12.809Z",
-  "groups": [],
+  "updatedAt": "2026-09-10T13:04:43.290Z",
+  "groups": [
+    {
+      "id": "g-70da0ba2",
+      "name": "New group",
+      "createdAt": "2026-09-10T13:04:43.290Z",
+      "createdBy": "ilil"
+    }
+  ],
   "comments": [
     {
       "id": "c-e8337698",
@@ -90,7 +97,7 @@
       "comment": "זה מרגיש סקרול נורא ארוך, מלא נדלן לא מנוצל בצד המשאלי של התצוגה, אולי לפצל את זה ולהציג בשני מלבנים על המסך?",
       "resolved": false,
       "replies": [],
-      "groupId": null
+      "groupId": "g-70da0ba2"
     },
     {
       "id": "c-d02db25c",
@@ -106,7 +113,7 @@
       "comment": "אצווה?",
       "resolved": false,
       "replies": [],
-      "groupId": null
+      "groupId": "g-70da0ba2"
     },
     {
       "id": "c-f8a41034",
