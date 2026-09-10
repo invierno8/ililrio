@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T13:26:27.480Z",
+  "updatedAt": "2026-09-10T13:27:00.416Z",
   "groups": [],
   "comments": [
     {
@@ -230,6 +230,24 @@
       "secondaryTargets": [],
       "drawing": null,
       "comment": "אין יכולת למחוק את המסננים אחרי שבחרתי אותם צריך אחד אחד במקום קולקטיבי",
+      "groupId": null,
+      "resolved": false,
+      "replies": []
+    },
+    {
+      "id": "c-1a38c008",
+      "createdAt": "2026-09-10T13:27:00.416Z",
+      "authorId": "u-064034660b",
+      "authorName": "אקדא",
+      "route": "catalog",
+      "routePersona": "P1",
+      "routeItemId": null,
+      "targetLabel": "תמונה חט\"ל זמין מערכת ניהול חירום מערכת לניהול אירועי חירום …",
+      "targetPath": "0/1/1/0/2/2",
+      "targetKind": "block",
+      "secondaryTargets": [],
+      "drawing": null,
+      "comment": "1",
       "groupId": null,
       "resolved": false,
       "replies": []
