@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T13:04:51.545Z",
+  "updatedAt": "2026-09-10T13:24:54.148Z",
   "groups": [],
   "comments": [
     {
@@ -215,6 +215,24 @@
       "resolved": false,
       "replies": [],
       "groupId": null
+    },
+    {
+      "id": "c-180771f0",
+      "createdAt": "2026-09-10T13:24:54.148Z",
+      "authorId": "u-682f158037",
+      "authorName": "rio",
+      "route": "catalog",
+      "routePersona": "P1",
+      "routeItemId": null,
+      "targetLabel": "מסננים (8)",
+      "targetPath": "0/1/1/0/0/1/0",
+      "targetKind": "block",
+      "secondaryTargets": [],
+      "drawing": null,
+      "comment": "אין יכולת למחוק את המסננים אחרי שבחרתי אותם צריך אחד אחד במקום קולקטיבי",
+      "groupId": null,
+      "resolved": false,
+      "replies": []
     }
   ]
 }
