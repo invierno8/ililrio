@@ -522,3 +522,38 @@ body.jynx-side-open { --jynx-side-offset: var(--jynx-side-width); }
   border-radius: 6px; padding: 4px 8px;
 }
 .comments-drawing-badge { font-size: 10.5px; color: var(--jynx); display: inline-flex; align-items: center; gap: 4px; }
+
+/* ---------- הצעות של Jynx ---------- */
+
+/* הערה שהשאירה Jynx עצמה מסומנת בתג משלה, כדי שיהיה ברור במבט אחד שזו
+   הצעה אוטומטית ולא הערה של אדם. הנצנוץ הוא אותו הבזק אור של שלד הטעינה,
+   רק בסגול — סימן שמשהו כאן נוצר על ידה. */
+.comments-jynx-suggestion {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 8px; border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--jynx) 55%, transparent);
+  background: color-mix(in srgb, var(--jynx) 14%, transparent);
+  color: var(--jynx); font-family: var(--font-jynx);
+  font-size: 9px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  overflow: hidden; white-space: nowrap;
+}
+.comments-jynx-suggestion::after {
+  content: ''; position: absolute; inset: 0; transform: translateX(-120%);
+  background: linear-gradient(100deg, transparent 0%, color-mix(in srgb, var(--jynx) 55%, transparent) 50%, transparent 100%);
+  animation: jynxSuggestionSheen 2.8s var(--ease-io) infinite;
+}
+@keyframes jynxSuggestionSheen { 60%, 100% { transform: translateX(120%); } }
+.comments-jynx-suggestion svg { animation: jynxSparkle 2.8s ease-in-out infinite; }
+@keyframes jynxSparkle {
+  0%, 55%, 100% { opacity: .75; transform: scale(1); }
+  65% { opacity: 1; transform: scale(1.25) rotate(12deg); }
+}
+.comments-jynx-suggestion-mark {
+  font-family: var(--font-jynx); font-weight: 700; letter-spacing: .06em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .comments-jynx-suggestion::after, .comments-jynx-suggestion svg { animation: none; }
+  .comments-jynx-suggestion::after { display: none; }
+}

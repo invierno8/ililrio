@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { MessageSquare, X, Search, CheckCircle2, Pencil, Trash2, CornerDownRight } from 'lucide-react';
 import { elementForComment } from './useHoverTarget.js';
 import { sameScreen, screenOf, personaOf } from './route.js';
+import JynxSuggestionBadge, { isJynxAuthor } from './JynxSuggestionBadge.jsx';
 import DrawingOverlay from './DrawingOverlay.jsx';
 
 /* ==================================================================
@@ -165,6 +166,7 @@ export default function CommentsPanel({ comments, route, currentUser, hotkeySymb
                   onClick={() => !isEditing && jumpTo(a)}
                 >
                   <span className="comments-sidebar-item-target">
+                    {isJynxAuthor(a) && <JynxSuggestionBadge />}
                     {a.targetKind === 'text' && <span className="comments-kind-badge">text</span>}
                     {otherPage && <span className="comments-route-badge" title="On another screen — click to go there">{screenOf(a.route)}</span>}
                     {personaOf(a) && <span className="comments-route-badge" title="Written while viewing as this persona">{personaOf(a)}</span>}

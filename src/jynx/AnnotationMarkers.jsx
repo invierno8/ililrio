@@ -4,6 +4,7 @@ import { CheckCircle2 } from 'lucide-react';
 import { useKeepInViewport } from './useKeepInViewport.js';
 import { elementForComment } from './useHoverTarget.js';
 import DrawingOverlay from './DrawingOverlay.jsx';
+import JynxSuggestionBadge, { isJynxAuthor } from './JynxSuggestionBadge.jsx';
 
 /* ==================================================================
    סימון קבוע (לא תלוי-הובר) לכל הערה על המסך הנוכחי — נקודה אחת לאלמנט,
@@ -167,7 +168,9 @@ function MarkerDot({ list, rect, open, currentUserId, isAdmin, onToggle, onResol
             {list.map((a) => (
               <div key={a.id} className="admin-marker-detail-item">
                 <div className="admin-marker-detail-head">
-                  <span className="admin-marker-detail-meta">{a.authorName}</span>
+                  {isJynxAuthor(a)
+                    ? <JynxSuggestionBadge />
+                    : <span className="admin-marker-detail-meta">{a.authorName}</span>}
                   {a.resolved && <span className="admin-marker-done-badge"><CheckCircle2 size={10} /> Done</span>}
                 </div>
                 <p className="admin-marker-detail-comment">{a.comment}</p>

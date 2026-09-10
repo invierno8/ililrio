@@ -101,6 +101,12 @@ export function findTarget(el, preferBlock = false) {
   // פקד מושבת הוא היעד עצמו: אין טעם לתפוס את המילה שבתוכו.
   if (el && el.matches && el.matches(DISABLED_CONTROLS)) return el;
 
+  // כל פקד הוא יעד בפני עצמו, גם בלי מחלקה של מערכת העיצוב. בלי הכלל הזה
+  // כפתור שמעוצב ב-style ישיר — כמו מחליף רשת/רשימה בקטלוג — לא נתפס, וההילה
+  // מטפסת עד שורת הכלים כולה במקום לסמן את הכפתור שמצביעים עליו.
+  const control = el && el.closest && el.closest('button, a[href], [role="button"], input, select, textarea');
+  if (control && !control.closest('.jynx-chrome')) return control;
+
   if (!preferBlock) {
     if (isTextTarget(el)) return el;
     if (el && el.parentElement && isTextTarget(el.parentElement)) return el.parentElement;
