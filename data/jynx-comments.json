@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T13:27:05.223Z",
+  "updatedAt": "2026-09-10T13:29:39.824Z",
   "groups": [],
   "comments": [
     {
@@ -230,6 +230,24 @@
       "secondaryTargets": [],
       "drawing": null,
       "comment": "אין יכולת למחוק את המסננים אחרי שבחרתי אותם צריך אחד אחד במקום קולקטיבי",
+      "groupId": null,
+      "resolved": false,
+      "replies": []
+    },
+    {
+      "id": "c-9689e100",
+      "createdAt": "2026-09-10T13:29:39.824Z",
+      "authorId": "u-064034660b",
+      "authorName": "אקדא",
+      "route": "catalog",
+      "routePersona": "P1",
+      "routeItemId": null,
+      "targetLabel": "נקה הכל",
+      "targetPath": "0/1/1/0/1/3",
+      "targetKind": "block",
+      "secondaryTargets": [],
+      "drawing": null,
+      "comment": "אחלה שיש נקה הכל! אבל זיהיה גם ברשימה עצמה אופציה",
       "groupId": null,
       "resolved": false,
       "replies": []
