@@ -13,7 +13,7 @@ import { elementForComment } from './useHoverTarget.js';
    theme.css) במקום לכסות אותו, כך ששום דבר באתר לא מוסתר בזמן שהיא פתוחה.
    ================================================================== */
 
-export default function CommentsPanel({ comments, route, currentUser, onClose, onResolve, onDelete, onEdit, onReply }) {
+export default function CommentsPanel({ comments, route, currentUser, hotkeySymbol = 'Ctrl', onClose, onResolve, onDelete, onEdit, onReply }) {
   const [statusFilter, setStatusFilter] = useState('open');
   const [scope, setScope] = useState('page');
   const [mineOnly, setMineOnly] = useState(false);
@@ -110,7 +110,7 @@ export default function CommentsPanel({ comments, route, currentUser, onClose, o
             No {statusFilter} comments {scope === 'all' ? 'anywhere' : 'on this screen'}
             {(keywordNeedle || mineOnly) ? ' matching these filters' : ''}.
             <br />
-            Ctrl/Cmd+click anything on the page to leave one.
+            Hold {hotkeySymbol} and click anything on the page to leave one.
           </div>
         )}
 

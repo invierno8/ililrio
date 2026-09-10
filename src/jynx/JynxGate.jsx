@@ -67,7 +67,8 @@ export default function JynxGate() {
   const [markersOn, setMarkersOn] = useState(() => loadFlag(MARKERS_ON_KEY, true));
   const [commentsOn, setCommentsOn] = useState(false);
   const [usersOpen, setUsersOpen] = useState(false);
-  const [hotkey, setHotkey] = useHotkeyModifier();
+  // ההעדפה נשמרת לפי המשתמש, לא לפי הדפדפן — מי שמחליף מקש משנה רק לעצמו.
+  const [hotkey, setHotkey] = useHotkeyModifier(user?.id);
 
   const lockedFab = useDraggableFab('jynx-locked-fab-pos');
   const toolbarFab = useDraggableFab('jynx-toolbar-pos');
@@ -311,6 +312,7 @@ export default function JynxGate() {
           comments={comments}
           route={route}
           routeLabel={SCREEN_LABELS[state.activeScreenId] || state.activeScreenId}
+          hotkeySymbol={MODIFIERS[hotkey].symbol}
           currentUser={user}
           onClose={() => setCommentsOn(false)}
           onResolve={handleResolve}

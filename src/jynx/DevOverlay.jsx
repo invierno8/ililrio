@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useHoverTarget, labelForElement, pathForElement, findTarget } from './useHoverTarget.js';
 import AnnotationPopover from './AnnotationPopover.jsx';
 import AnnotationMarkers from './AnnotationMarkers.jsx';
-import { hasHotkey, MODIFIERS } from './hotkey.js';
+import { hasHotkey, useHotkeyHeld, MODIFIERS } from './hotkey.js';
 
 /* ==================================================================
    מותקן פעם אחת, כל עוד יש משתמש מחובר. שלושה תפקידים, כמו ב-commando
@@ -26,7 +26,11 @@ function parseSecondaryTargetsFromComment(comment) {
 }
 
 export default function DevOverlay({ hoverOn, markersOn, route, comments, currentUser, hotkey, onSubmit, onResolve, onDelete }) {
-  const target = useHoverTarget(hoverOn, true);
+  // ההילה מופיעה רק כל עוד המקש מוחזק: מחזיקים, עוברים מעל, לוחצים ומעירים.
+  // בלי זה כל תנועת עכבר על העמוד הייתה מציירת מסגרת, גם כשרק קוראים אותו.
+  // העין נשארת המתג העליון — כבויה, אין הילה גם כשמחזיקים.
+  const hotkeyHeld = useHotkeyHeld(hotkey);
+  const target = useHoverTarget(hoverOn && hotkeyHeld, true);
   const [popover, setPopover] = useState(null); // { x, y, label, path, secondaryTargets: [] } | null
   const isJynxHover = !!target?.closest('.jynx-chrome');
   // "בוחר יעד משני" הוא פשוט: יש popover פתוח. אין שלב-ביניים של כפתור
@@ -84,7 +88,7 @@ export default function DevOverlay({ hoverOn, markersOn, route, comments, curren
     };
   }, [target, popover, hotkey]);
 
-  const rect = hoverOn ? target?.getBoundingClientRect() : null;
+  const rect = hoverOn && hotkeyHeld ? target?.getBoundingClientRect() : null;
 
   async function submit(comment) {
     await onSubmit({

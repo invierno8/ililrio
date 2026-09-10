@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MODIFIERS, modifierFromEvent } from './hotkey.js';
+import { MODIFIERS, modifierFromEvent, labelFor, isMacPlatform } from './hotkey.js';
 
 /**
  * השורה שמתחת לסרגל: איזה מקש מחזיקים כדי להעיר, ואיך משנים אותו.
@@ -45,7 +45,7 @@ export default function HotkeyHint({ modifier, onChange }) {
   return (
     <div className="jynx-hotkey-hint jynx-chrome jynx-ui" ref={wrapRef}>
       <span className="jynx-hotkey-hint-text">
-        {spec.symbol}+click any element to comment
+        Hold {spec.symbol} and click any element to comment
       </span>
       <button
         type="button"
@@ -53,12 +53,12 @@ export default function HotkeyHint({ modifier, onChange }) {
         onClick={() => { setRejected(''); setCapturing((v) => !v); }}
         title="Click to pick a different key"
       >
-        Current hotkey: {spec.symbol === spec.label ? spec.label : `${spec.symbol} ${spec.label}`}
+        Current hotkey: {spec.symbol === labelFor(modifier) ? labelFor(modifier) : `${spec.symbol} ${labelFor(modifier)}`}
       </button>
       {capturing && (
         <div className="jynx-hotkey-capture">
           <span className="jynx-hotkey-capture-title">Press anything to set a new hotkey</span>
-          <span className="jynx-hotkey-capture-keys">⌘ · Ctrl · ⌥ · ⇧</span>
+          <span className="jynx-hotkey-capture-keys">{isMacPlatform() ? '⌘ · ⌥ · ⇧ · Ctrl' : 'Ctrl · Alt · ⇧'}</span>
           <span className="jynx-hotkey-capture-hint">
             It has to be a key you can hold down while clicking.
           </span>
