@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T10:58:21.348Z",
+  "updatedAt": "2026-09-10T10:58:43.670Z",
   "comments": [
     {
       "id": "c-e8337698",
@@ -27,6 +27,21 @@
       "secondaryTargets": [],
       "drawing": null,
       "comment": "לא מובן מה זה",
+      "resolved": false,
+      "replies": []
+    },
+    {
+      "id": "c-52b2898b",
+      "createdAt": "2026-09-10T10:58:43.670Z",
+      "authorId": "u-682f158037",
+      "authorName": "rio",
+      "route": "P2:my-items",
+      "targetLabel": "הבעות עניין",
+      "targetPath": "0/0/1/1/1",
+      "targetKind": "block",
+      "secondaryTargets": [],
+      "drawing": null,
+      "comment": "דמ״צים?",
       "resolved": false,
       "replies": []
     }
