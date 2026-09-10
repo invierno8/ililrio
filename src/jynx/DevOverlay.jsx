@@ -174,6 +174,7 @@ export default function DevOverlay({ hoverOn, markersOn, drawMode, drawColor, ro
         comments={comments.filter((c) => sameScreen(c.route, route))}
         currentUserId={currentUser?.id}
         isAdmin={!!currentUser?.isAdmin}
+        isViewer={!!currentUser?.isViewer}
         onResolve={onResolve}
         onDelete={onDelete}
       />

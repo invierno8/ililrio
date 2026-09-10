@@ -30,6 +30,15 @@ const ADMINS = {
   ilil: process.env.JYNX_PASSWORD_ILIL || '1111',
 };
 
+/**
+ * חשבון ההתנסות. מי שנכנס איתו רואה את החוט ויכול להעיר, אבל שום דבר ממה
+ * שהוא כותב אינו מגיע לשירות: זה חי בדפדפן שלו בלבד (ראו localComments
+ * בצד הלקוח). הוא אינו נרשם ברשימת המשתמשים, אינו מופיע לאיש, ואינו יכול
+ * לשנות דבר — כל בקשה שאינה GET נדחית לו כאן, לא רק בממשק.
+ */
+export const VIEWER_PASSWORD = process.env.JYNX_VIEWER_PASSWORD || '0000';
+export const VIEWER_USER = { id: 'u-viewer', name: 'viewer', isAdmin: false, isViewer: true };
+
 export const ADMIN_NAMES = Object.keys(ADMINS);
 export const ADMIN_SEED_PASSWORD = (name) => ADMINS[String(name).toLowerCase()];
 export const ADMIN_PASSWORDS_ARE_DEFAULT = !process.env.JYNX_PASSWORD_RIO && !process.env.JYNX_PASSWORD_TOM && !process.env.JYNX_PASSWORD_ILIL;
@@ -100,6 +109,9 @@ export function verify(token) {
 /** האם הסיסמה הזו כבר שייכת למישהו? הסיסמה היא הזהות, ולכן שתי זהויות עם
  *  אותה סיסמה היו מתנגשות — מי שנכנס היה מקבל את החשבון של השני. */
 export function passwordTaken(password, roster, exceptId) {
+  // סיסמת ההתנסות תפוסה כמו כל אחרת: אם מעיר היה מקבל אותה, הוא היה נכנס
+  // לחשבון הצפייה במקום לשלו.
+  if (samePassword(password, VIEWER_PASSWORD)) return true;
   return roster.some((u) => u.id !== exceptId && verifyHashed(password, u));
 }
 
@@ -114,6 +126,11 @@ export function login(password, roster) {
   const given = String(password || '');
   if (!given) return { error: 'Password required' };
 
+  // חשבון ההתנסות נבדק ראשון, והוא אינו נשען על הרשימה כלל.
+  if (samePassword(given, VIEWER_PASSWORD)) {
+    return { user: VIEWER_USER, token: sign({ ...VIEWER_USER, exp: Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000 }) };
+  }
+
   const known = roster.find((u) => verifyHashed(given, u));
   if (!known) return { error: 'Wrong password' };
 
@@ -127,7 +144,11 @@ export function requireUser(req, res, next) {
   const token = header.startsWith('Bearer ') ? header.slice(7) : '';
   const payload = verify(token);
   if (!payload) return res.status(401).json({ error: 'Sign in required' });
-  req.user = { id: payload.id, name: payload.name, isAdmin: !!payload.isAdmin };
+  req.user = { id: payload.id, name: payload.name, isAdmin: !!payload.isAdmin, isViewer: !!payload.isViewer };
+  // הגבול האמיתי של חשבון ההתנסות הוא כאן ולא בממשק: הוא רשאי לקרוא, וזהו.
+  if (req.user.isViewer && req.method !== 'GET') {
+    return res.status(403).json({ error: 'The demo account can look around, but not change anything' });
+  }
   return next();
 }
 

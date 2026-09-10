@@ -602,6 +602,24 @@ body.jynx-side-open { --jynx-side-offset: var(--jynx-side-width); }
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--jynx) 22%, transparent);
 }
 
+/* ---------- חשבון ההתנסות ---------- */
+
+.comments-demo-note {
+  margin: 0 10px 7px; padding: 5px 8px; border-radius: 7px;
+  border: 1px dashed color-mix(in srgb, var(--jynx) 40%, transparent);
+  background: color-mix(in srgb, var(--jynx) 7%, transparent);
+  color: var(--text-dim); font-size: 10px; line-height: 1.4;
+}
+.comments-local-badge {
+  display: inline-flex; align-items: center; padding: 0 5px; height: 14px; border-radius: 4px;
+  background: color-mix(in srgb, var(--jynx) 22%, transparent);
+  color: var(--jynx); font-family: var(--font-mono); font-size: 8.5px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase;
+}
+.dev-greeting-note {
+  color: var(--text-dim); font-size: 10px; line-height: 1.45; max-width: 210px;
+}
+
 /* ---------- שורת המנהל: ייצוא ובחירה מרובה ---------- */
 
 .comments-admin-row, .comments-bulk-bar {

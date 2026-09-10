@@ -76,6 +76,8 @@ const saveUsers = (message) => writeJson(USERS_PATH, { version: 1, updatedAt: ne
 
 /** רושם מתי מישהו נכנס לאחרונה, כדי שרשימת המעירים תשקף מי באמת פעיל. */
 async function touchUser(user) {
+  // חשבון ההתנסות אינו נרשם בשום מקום — זה כל העניין שלו.
+  if (user.isViewer) return;
   const known = users.find((u) => u.id === user.id);
   if (known) {
     known.name = user.name;

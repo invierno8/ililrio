@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Lock, Eye, EyeOff, MessageSquare, GripVertical, GripHorizontal, X, Loader2, Target, Users, Pencil } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Lock, MessageSquare, GripVertical, GripHorizontal, X, Loader2, Target, Users, Pencil } from 'lucide-react';
 import { useRio } from '../store/index.js';
 import { useIsNarrow } from '../components/DesktopOnly.jsx';
 import {
@@ -15,6 +15,9 @@ import GreetingMenu from './GreetingMenu.jsx';
 import UsersPanel from './UsersPanel.jsx';
 import HotkeyHint from './HotkeyHint.jsx';
 import { useHotkeyModifier, hotkeySymbol, isPlainKey, plainKeyOf } from './hotkey.js';
+import {
+  loadLocalComments, saveLocalComments, clearLocalComments, makeLocalComment, isLocalComment,
+} from './localComments.js';
 import { screenOf, personaOf } from './route.js';
 import './theme.css';
 
@@ -26,7 +29,7 @@ import './theme.css';
    שם. אין מצב "נשמר אצלי בדפדפן" — החוט משותף או שאינו קיים.
    ================================================================== */
 
-const DEFAULT_TOOLBAR_ORDER = ['overlay', 'draw', 'comments', 'markers', 'users'];
+const DEFAULT_TOOLBAR_ORDER = ['draw', 'comments', 'markers', 'users'];
 
 /** ארבע המשבצות של לוח הציור, כמו ב-commando. */
 const JYNX_DRAW_COLORS = [
@@ -37,10 +40,9 @@ const JYNX_DRAW_COLORS = [
 ];
 const DRAW_COLOR_KEY = 'jynx-draw-color';
 const TOOLBAR_ORIENTATION_KEY = 'jynx-toolbar-orientation';
-const OVERLAY_ON_KEY = 'jynx-overlay-on';
 const MARKERS_ON_KEY = 'jynx-markers-on';
 
-const SHORTCUT_LABELS = { overlay: 'Hover overlay', draw: 'Drawing', comments: 'Comments panel', markers: 'Status dots', users: 'Users' };
+const SHORTCUT_LABELS = { draw: 'Drawing', comments: 'Comments panel', markers: 'Status dots', users: 'Users' };
 const POLL_MS = 6000;
 
 function loadFlag(key, fallback) {
@@ -66,6 +68,8 @@ export default function JynxGate() {
   const [user, setUser] = useState(null);
   const [comments, setComments] = useState([]);
   const [groups, setGroups] = useState([]);
+  // חשבון ההתנסות: מה שהוא כותב נשאר כאן, ואף פעם לא נשלח לשירות.
+  const [localComments, setLocalComments] = useState(() => loadLocalComments());
 
   const [loginOpen, setLoginOpen] = useState(false);
   const [password, setPassword] = useState('');
@@ -78,7 +82,6 @@ export default function JynxGate() {
   const [toolbarOrientation, setToolbarOrientation] = useState(() => {
     try { return localStorage.getItem(TOOLBAR_ORIENTATION_KEY) === 'vertical' ? 'vertical' : 'horizontal'; } catch { return 'horizontal'; }
   });
-  const [overlayOn, setOverlayOn] = useState(() => loadFlag(OVERLAY_ON_KEY, true));
   const [markersOn, setMarkersOn] = useState(() => loadFlag(MARKERS_ON_KEY, true));
   const [commentsOn, setCommentsOn] = useState(false);
   const [usersOpen, setUsersOpen] = useState(false);
@@ -121,7 +124,6 @@ export default function JynxGate() {
     }
   }, [state.currentPersona, store]);
 
-  useEffect(() => { try { localStorage.setItem(OVERLAY_ON_KEY, String(overlayOn)); } catch { /* ignore */ } }, [overlayOn]);
   useEffect(() => { try { localStorage.setItem(MARKERS_ON_KEY, String(markersOn)); } catch { /* ignore */ } }, [markersOn]);
 
   // שחזור סשן קיים. השירות ב-Render נרדם אחרי חוסר פעילות, ולכן הבועה מציגה
@@ -168,6 +170,16 @@ export default function JynxGate() {
     return () => clearInterval(t);
   }, [user, refresh]);
 
+  const isViewer = !!user?.isViewer;
+  // מה שמוצג בכל מקום: החוט המשותף, ולחשבון ההתנסות גם מה שהוא כתב לעצמו.
+  const shownComments = useMemo(
+    () => (isViewer ? [...comments, ...localComments] : comments),
+    [comments, localComments, isViewer],
+  );
+
+  const writeLocal = (next) => { setLocalComments(next); saveLocalComments(next); };
+  const editLocal = (id, change) => writeLocal(localComments.map((c) => (c.id === id ? { ...c, ...change } : c)));
+
   const toolbarOrder = DEFAULT_TOOLBAR_ORDER.filter((id) => id !== 'users' || (user && user.isAdmin));
 
   // מקשי 1..N מפעילים את כפתורי הסרגל לפי סדרם בפועל, כמו במקור.
@@ -183,7 +195,6 @@ export default function JynxGate() {
       if (!Number.isInteger(idx) || idx < 0 || idx >= toolbarOrder.length) return;
       e.preventDefault();
       const id = toolbarOrder[idx];
-      if (id === 'overlay') setOverlayOn((v) => !v);
       if (id === 'comments') setCommentsOn((v) => !v);
       if (id === 'markers') setMarkersOn((v) => !v);
       if (id === 'users') setUsersOpen((v) => !v);
@@ -241,23 +252,28 @@ export default function JynxGate() {
   ));
 
   async function handleSubmit(payload) {
+    // חשבון ההתנסות אינו פונה לשירות בכלל — ההערה נולדת ונשארת בדפדפן שלו.
+    if (isViewer) { writeLocal([...localComments, makeLocalComment(payload, user)]); return; }
     markLocalWrite();
     mergeComment(await submitAnnotation(payload));
     markLocalWrite();
   }
   async function handleResolve(a, resolved) {
+    if (isLocalComment(a)) { editLocal(a.id, { resolved }); return; }
     markLocalWrite();
     setComments((prev) => prev.map((c) => (c.id === a.id ? { ...c, resolved } : c)));
     await resolveAnnotation(a.id, resolved).catch(() => refresh());
     markLocalWrite();
   }
   async function handleDelete(a) {
+    if (isLocalComment(a)) { writeLocal(localComments.filter((c) => c.id !== a.id)); return; }
     markLocalWrite();
     setComments((prev) => prev.filter((c) => c.id !== a.id));
     await deleteAnnotation(a.id).catch(() => refresh());
     markLocalWrite();
   }
   async function handleEdit(a, comment) {
+    if (isLocalComment(a)) { editLocal(a.id, { comment }); return; }
     markLocalWrite();
     setComments((prev) => prev.map((c) => (c.id === a.id ? { ...c, comment } : c)));
     await editAnnotation(a.id, comment).catch(() => refresh());
@@ -317,6 +333,15 @@ export default function JynxGate() {
   }
 
   async function handleReply(a, body) {
+    if (isLocalComment(a)) {
+      editLocal(a.id, {
+        replies: [...(a.replies || []), {
+          id: 'local-r-' + Math.random().toString(16).slice(2, 8),
+          body, authorId: user.id, authorName: user.name, createdAt: new Date().toISOString(),
+        }],
+      });
+      return;
+    }
     markLocalWrite();
     const saved = await replyToAnnotation(a.id, body).catch(() => null);
     markLocalWrite();
@@ -395,11 +420,6 @@ export default function JynxGate() {
   const shortcuts = toolbarOrder.map((id, i) => ({ num: i + 1, label: SHORTCUT_LABELS[id] || id }));
 
   const TOOLBAR_ITEM_NODES = {
-    overlay: (
-      <button type="button" className="dev-toolbar-icon-btn" data-devblock="jynx-toolbar-overlay-toggle" onClick={() => setOverlayOn((v) => !v)} title={overlayOn ? 'Turn off hover overlay' : 'Turn on hover overlay'}>
-        {overlayOn ? <Eye size={13} /> : <EyeOff size={13} />}
-      </button>
-    ),
     comments: (
       <button type="button" className={'dev-toolbar-icon-btn' + (commentsOn ? ' active' : '')} data-devblock="jynx-toolbar-comments-toggle" onClick={() => setCommentsOn((v) => !v)} title={commentsOn ? 'Hide the comments panel' : 'Show all comments'}>
         <MessageSquare size={13} />
@@ -425,14 +445,14 @@ export default function JynxGate() {
   return (
     <>
       <DevOverlay
-        hoverOn={overlayOn}
+        hoverOn
         markersOn={markersOn}
         drawMode={drawMode}
         drawColor={drawColor}
         route={route}
         routePersona={state.currentPersona}
         routeItemId={routeItemId}
-        comments={comments}
+        comments={shownComments}
         currentUser={user}
         hotkey={hotkey}
         onSubmit={handleSubmit}
@@ -442,7 +462,7 @@ export default function JynxGate() {
 
       {commentsOn && (
         <CommentsPanel
-          comments={comments}
+          comments={shownComments}
           groups={groups}
           route={route}
           routeLabel={SCREEN_LABELS[state.activeScreenId] || state.activeScreenId}
@@ -506,7 +526,11 @@ export default function JynxGate() {
                 </div>
               )
             ))}
-            <GreetingMenu user={user} shortcuts={shortcuts} hotkeySymbol={hotkeySymbol(hotkey)} onLogout={logout} />
+            <GreetingMenu
+              user={user} shortcuts={shortcuts} hotkeySymbol={hotkeySymbol(hotkey)} onLogout={logout}
+              localCount={isViewer ? localComments.length : 0}
+              onClearLocal={() => { clearLocalComments(); setLocalComments([]); }}
+            />
             <button type="button" className="dev-toolbar-icon-btn" data-devblock="jynx-toolbar-collapse-btn" onClick={() => setToolbarOpen(false)} title="Collapse to the Jynx bubble">
               <X size={13} />
             </button>

@@ -8,6 +8,7 @@ import { sectionsFor, ARRANGEMENTS, NEW_GROUP_NAME, AUTO_JYNX_GROUP } from './gr
 import DrawingOverlay from './DrawingOverlay.jsx';
 import DragHint from './DragHint.jsx';
 import { downloadCsv, copyMarkdown } from './exportComments.js';
+import { isLocalComment } from './localComments.js';
 
 /* ==================================================================
    פאנל ההערות. התוכן והפילטרים הם של commando (overlay/CommentsPanel.jsx)
@@ -59,6 +60,7 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [flash2, setFlash2] = useState('');
   const isAdmin = !!currentUser?.isAdmin;
+  const isViewer = !!currentUser?.isViewer;
 
   const say = (msg) => { setFlash2(msg); setTimeout(() => setFlash2((m) => (m === msg ? '' : m)), 2600); };
   const toggleSelect = (id) => setSelected((prev) => {
@@ -378,6 +380,12 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
 
         {flash2 && <div className="comments-flash-note">{flash2}</div>}
 
+        {isViewer && (
+          <div className="comments-demo-note">
+            Demo account — the comments you leave stay in this browser and are not sent anywhere.
+          </div>
+        )}
+
         {shown.length === 0 && (
           <div className="comments-sidebar-empty">
             No {statusFilter} comments {scope === 'all' ? 'anywhere' : 'on this screen'}
@@ -400,8 +408,9 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
         )}
 
         <div className="comments-sidebar-list">
-          {/* אין טעם ללמד גרירה כשאין לאן לגרור, או כשכבר יש קבוצות. */}
-          {!hintDone && arrange !== 'none' && shown.length >= 2
+          {/* אין טעם ללמד גרירה כשאין לאן לגרור, כשכבר יש קבוצות, או
+              כשהמשתמש הוא חשבון התנסות — קיבוץ נשמר בשירות, והוא אינו כותב. */}
+          {!hintDone && !isViewer && arrange !== 'none' && shown.length >= 2
             && !sections.some((sec) => sec.kind === 'manual')
             && <DragHint onDismiss={dismissHint} />}
 
@@ -485,9 +494,12 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
   /** שורת הערה אחת — משמשת גם בתוך קבוצה וגם מחוצה לה. */
   function renderComment(a, { inAutoGroup = false } = {}) {
     const replies = a.replies || [];
-    const mine = currentUser && a.authorId === currentUser.id;
+    const local = isLocalComment(a);
+    // חשבון ההתנסות נוגע רק במה שהוא עצמו כתב, וגם זה רק אצלו בדפדפן.
+    const mine = currentUser && a.authorId === currentUser.id && (!isViewer || local);
     const canEdit = mine;
     const canDelete = mine || (currentUser && currentUser.isAdmin);
+    const canReply = !isViewer || local;
     const otherPage = scope === 'all' && a.route && !sameScreen(a.route, route);
     const isEditing = editingId === a.id;
     return (
@@ -498,7 +510,7 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
                     + (dragId === a.id ? ' comments-sidebar-item-dragging' : '')
                     + (dropTarget === a.id ? ' comments-sidebar-item-drop' : '')
                     + (selected.has(a.id) ? ' comments-sidebar-item-selected' : '')}
-                  draggable={!selecting}
+                  draggable={!selecting && !isViewer}
                   onDragStart={(e) => {
                     e.dataTransfer.effectAllowed = 'move';
                     e.dataTransfer.setData('text/plain', a.id);
@@ -530,6 +542,7 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
                         {selected.has(a.id) ? <CheckSquare size={12} /> : <Square size={12} />}
                       </span>
                     )}
+                    {local && <span className="comments-local-badge" title="Only you can see this — it lives in your browser">only you</span>}
                     {isJynxAuthor(a) && !inAutoGroup && <JynxSuggestionBadge />}
                     {a.targetKind === 'text' && <span className="comments-kind-badge">text</span>}
                     {otherPage && <span className="comments-route-badge" title="On another screen — click to go there">{screenOf(a.route)}</span>}
@@ -612,9 +625,11 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
                     </div>
                   ) : (
                     <div className="comments-edit-actions" style={{ justifyContent: 'flex-start' }}>
-                      <button type="button" className="comments-reply-btn" onClick={(e) => { e.stopPropagation(); setReplyingId(a.id); setReplyText(''); }}>
-                        <CornerDownRight size={11} /> Reply
-                      </button>
+                      {canReply && (
+                        <button type="button" className="comments-reply-btn" onClick={(e) => { e.stopPropagation(); setReplyingId(a.id); setReplyText(''); }}>
+                          <CornerDownRight size={11} /> Reply
+                        </button>
+                      )}
                       {/* "טופל" הוא החלטה של מנהל — מי שאינו מנהל רואה את
                           הסטטוס אבל אינו קובע אותו. */}
                       {currentUser?.isAdmin && (

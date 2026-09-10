@@ -5,6 +5,7 @@ import { useKeepInViewport } from './useKeepInViewport.js';
 import { elementForComment } from './useHoverTarget.js';
 import DrawingOverlay from './DrawingOverlay.jsx';
 import JynxSuggestionBadge, { isJynxAuthor } from './JynxSuggestionBadge.jsx';
+import { isLocalComment } from './localComments.js';
 
 /* ==================================================================
    סימון קבוע (לא תלוי-הובר) לכל הערה על המסך הנוכחי — נקודה אחת לאלמנט,
@@ -25,7 +26,7 @@ import JynxSuggestionBadge, { isJynxAuthor } from './JynxSuggestionBadge.jsx';
 const COLOR_OPEN = 'var(--jynx)';
 const COLOR_DONE = 'var(--green)';
 
-export default function AnnotationMarkers({ active, comments, currentUserId, isAdmin, onResolve, onDelete }) {
+export default function AnnotationMarkers({ active, comments, currentUserId, isAdmin, isViewer = false, onResolve, onDelete }) {
   const [tick, setTick] = useState(0);
   const [openLabel, setOpenLabel] = useState(null);
 
@@ -100,6 +101,7 @@ export default function AnnotationMarkers({ active, comments, currentUserId, isA
           currentUserId={currentUserId}
           isAdmin={isAdmin}
           onToggle={() => setOpenLabel((cur) => (cur === key ? null : key))}
+          isViewer={isViewer}
           onResolve={onResolve}
           onDelete={onDelete}
         />
@@ -109,7 +111,7 @@ export default function AnnotationMarkers({ active, comments, currentUserId, isA
   );
 }
 
-function MarkerDot({ list, rect, open, currentUserId, isAdmin, onToggle, onResolve, onDelete }) {
+function MarkerDot({ list, rect, open, currentUserId, isAdmin, isViewer, onToggle, onResolve, onDelete }) {
   const openItems = list.filter((a) => !a.resolved);
   const allResolved = openItems.length === 0;
   const color = allResolved ? COLOR_DONE : COLOR_OPEN;
@@ -188,7 +190,7 @@ function MarkerDot({ list, rect, open, currentUserId, isAdmin, onToggle, onResol
                       {a.resolved ? 'Reopen' : 'Mark done'}
                     </button>
                   )}
-                  {(isAdmin || a.authorId === currentUserId) && (
+                  {(isAdmin || (a.authorId === currentUserId && (!isViewer || isLocalComment(a)))) && (
                     <button type="button" onClick={() => onDelete(a)}>Delete</button>
                   )}
                 </div>
