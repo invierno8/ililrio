@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T11:43:44.159Z",
+  "updatedAt": "2026-09-10T11:43:47.463Z",
   "comments": [
     {
       "id": "c-e8337698",
@@ -102,23 +102,6 @@
       "secondaryTargets": [],
       "drawing": null,
       "comment": "אצווה?",
-      "resolved": false,
-      "replies": []
-    },
-    {
-      "id": "c-7589282c",
-      "createdAt": "2026-09-10T11:37:04.645Z",
-      "authorId": "u-c313213c35",
-      "authorName": "Jynx",
-      "route": "my-follows",
-      "routePersona": "P1",
-      "routeItemId": null,
-      "targetLabel": "עדכן",
-      "targetPath": "0/1/1/0/1/1/0/3/0/1",
-      "targetKind": "block",
-      "secondaryTargets": [],
-      "drawing": null,
-      "comment": "הכפתור \"עדכן\" מושבת, וההסבר היחיד — \"פעולה זו טרם הוגדרה\" — מופיע רק בריחוף. משתמש שלא מרחף רואה כפתור מת ולא יודע אם חסרה לו הרשאה, אם משהו נכשל, או אם הפעולה פשוט עוד לא קיימת. עד שהיא קיימת עדיף להסתיר אותו; ואם משאירים — לכתוב את הסיבה ליד הכפתור ולא ב-tooltip.",
       "resolved": false,
       "replies": []
     }
