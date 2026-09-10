@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T13:25:55.172Z",
+  "updatedAt": "2026-09-10T13:26:03.520Z",
   "users": [
     {
       "id": "u-682f158037",
@@ -21,6 +21,16 @@
       "lastSeen": "2026-09-10T13:22:39.908Z",
       "salt": "16f53bdff2a77d508de56e738209a6f7",
       "hash": "e84da2218f6b2d37874112bfe1a49346a8cda9442e95012d822f8948839b3d32"
+    },
+    {
+      "id": "u-064034660b",
+      "name": "אקדא",
+      "isAdmin": false,
+      "salt": "a6462a7c65cfd800b64ebac8eac01450",
+      "hash": "9ec0deeee18f69cceb25dbd74fb8cf24be7c8a70b742cb90ec46e24406e2e6d0",
+      "addedBy": "rio",
+      "firstSeen": null,
+      "lastSeen": null
     }
   ]
 }
