@@ -115,7 +115,7 @@ app.get('/api/jynx/comments', requireUser, (req, res) => {
 });
 
 app.post('/api/jynx/comments', requireUser, async (req, res) => {
-  const { route, routeItemId, targetLabel, targetPath, targetKind, comment, secondaryTargets, drawing } = req.body || {};
+  const { route, routePersona, routeItemId, targetLabel, targetPath, targetKind, comment, secondaryTargets, drawing } = req.body || {};
   if (!comment || !String(comment).trim()) return res.status(400).json({ error: 'Comment is empty' });
 
   const saved = {
@@ -124,6 +124,9 @@ app.post('/api/jynx/comments', requireUser, async (req, res) => {
     authorId: req.user.id,
     authorName: req.user.name,
     route: route || '',
+    // הפרסונה היא מידע לצד ההערה ולא חלק מהמיקום שלה: הערה על מסך שייכת
+    // למסך, ומי שקורא אותה בפרסונה אחרת אמור לראות אותה.
+    routePersona: routePersona || '',
     // איזה פריט היה פתוח, כשההערה נכתבה במסך פריט — כדי שאפשר יהיה לחזור
     // בדיוק לאותו פריט ולא לראשון ברשימה.
     routeItemId: routeItemId == null ? null : routeItemId,

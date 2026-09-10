@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { MessageSquare, X, Search, CheckCircle2, Pencil, Trash2, CornerDownRight } from 'lucide-react';
 import { elementForComment } from './useHoverTarget.js';
+import { sameScreen, screenOf, personaOf } from './route.js';
 import DrawingOverlay from './DrawingOverlay.jsx';
 
 /* ==================================================================
@@ -16,7 +17,9 @@ import DrawingOverlay from './DrawingOverlay.jsx';
 
 export default function CommentsPanel({ comments, route, currentUser, hotkeySymbol = 'Ctrl', onNavigate, onClose, onResolve, onDelete, onEdit, onReply }) {
   const [statusFilter, setStatusFilter] = useState('open');
-  const [scope, setScope] = useState('page');
+  // ברירת המחדל היא הכול, לא המסך הנוכחי: מי שנכנס אמור לראות מיד שיש חוט,
+  // ולא מסך ריק רק מפני שההערות נכתבו במקום אחר.
+  const [scope, setScope] = useState('all');
   const [mineOnly, setMineOnly] = useState(false);
   const [keywordFilter, setKeywordFilter] = useState('');
   const [hoveredId, setHoveredId] = useState(null);
@@ -36,7 +39,7 @@ export default function CommentsPanel({ comments, route, currentUser, hotkeySymb
   const shown = useMemo(() => {
     return comments
       .filter((a) => (statusFilter === 'open' ? !a.resolved : a.resolved))
-      .filter((a) => (scope === 'page' ? a.route === route : true))
+      .filter((a) => (scope === 'page' ? sameScreen(a.route, route) : true))
       .filter((a) => (!mineOnly || (currentUser && a.authorId === currentUser.id)))
       .filter((a) => (!keywordNeedle
         || a.comment.toLowerCase().includes(keywordNeedle)
@@ -63,7 +66,7 @@ export default function CommentsPanel({ comments, route, currentUser, hotkeySymb
 
   const jumpTo = (a) => {
     const here = elementForComment(a);
-    if (here && document.contains(here) && a.route === route) {
+    if (here && document.contains(here) && sameScreen(a.route, route)) {
       here.scrollIntoView({ block: 'center', behavior: 'smooth' });
       flash(a);
       return;
@@ -117,8 +120,12 @@ export default function CommentsPanel({ comments, route, currentUser, hotkeySymb
 
         <div className="comments-sidebar-filters comments-sidebar-scope-row">
           <div className="pill-tabs">
-            <button type="button" className={'pill-tab' + (scope === 'page' ? ' active' : '')} onClick={() => setScope('page')}>This screen</button>
-            <button type="button" className={'pill-tab' + (scope === 'all' ? ' active' : '')} onClick={() => setScope('all')}>All screens</button>
+            <button type="button" className={'pill-tab' + (scope === 'page' ? ' active' : '')} onClick={() => setScope('page')}>
+              This screen ({comments.filter((a) => sameScreen(a.route, route)).length})
+            </button>
+            <button type="button" className={'pill-tab' + (scope === 'all' ? ' active' : '')} onClick={() => setScope('all')}>
+              All screens ({comments.length})
+            </button>
           </div>
         </div>
 
@@ -147,7 +154,7 @@ export default function CommentsPanel({ comments, route, currentUser, hotkeySymb
             const mine = currentUser && a.authorId === currentUser.id;
             const canEdit = mine;
             const canDelete = mine || (currentUser && currentUser.isAdmin);
-            const otherPage = scope === 'all' && a.route && a.route !== route;
+            const otherPage = scope === 'all' && a.route && !sameScreen(a.route, route);
             const isEditing = editingId === a.id;
             return (
               <div key={a.id} className="comments-sidebar-item-wrap">
@@ -159,7 +166,8 @@ export default function CommentsPanel({ comments, route, currentUser, hotkeySymb
                 >
                   <span className="comments-sidebar-item-target">
                     {a.targetKind === 'text' && <span className="comments-kind-badge">text</span>}
-                    {otherPage && <span className="comments-route-badge" title="On another screen — click to go there">{a.route}</span>}
+                    {otherPage && <span className="comments-route-badge" title="On another screen — click to go there">{screenOf(a.route)}</span>}
+                    {personaOf(a) && <span className="comments-route-badge" title="Written while viewing as this persona">{personaOf(a)}</span>}
                     {a.targetLabel}
                     {a.resolved && <span className="comments-done-badge"><CheckCircle2 size={10} /> Done</span>}
                   </span>

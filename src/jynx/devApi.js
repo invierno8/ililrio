@@ -72,10 +72,10 @@ export async function fetchComments() {
   return (await call('/api/jynx/comments')).comments || [];
 }
 
-export async function submitAnnotation({ route, routeItemId, targetLabel, targetPath, targetKind, comment, secondaryTargets, drawing }) {
+export async function submitAnnotation({ route, routePersona, routeItemId, targetLabel, targetPath, targetKind, comment, secondaryTargets, drawing }) {
   return (await call('/api/jynx/comments', {
     method: 'POST',
-    body: JSON.stringify({ route, routeItemId, targetLabel, targetPath, targetKind, comment, secondaryTargets, drawing }),
+    body: JSON.stringify({ route, routePersona, routeItemId, targetLabel, targetPath, targetKind, comment, secondaryTargets, drawing }),
   })).comment;
 }
 

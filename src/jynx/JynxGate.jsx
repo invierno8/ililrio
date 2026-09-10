@@ -12,6 +12,7 @@ import GreetingMenu from './GreetingMenu.jsx';
 import UsersPanel from './UsersPanel.jsx';
 import HotkeyHint from './HotkeyHint.jsx';
 import { useHotkeyModifier, MODIFIERS } from './hotkey.js';
+import { screenOf, personaOf } from './route.js';
 import './theme.css';
 
 /* ==================================================================
@@ -94,7 +95,9 @@ export default function JynxGate() {
   const loginPanelRef = useRef(null);
   useKeepInViewport(loginPanelRef, loginOpen, 8, [error]);
 
-  const route = `${state.currentPersona}:${state.activeScreenId}`;
+  // המסך בלבד. הפרסונה נשמרת בנפרד, כדי שהיא לא תחלק את החוט לארבעה
+  // חוטים שאיש אינו רואה את כולם — ראו route.js.
+  const route = state.activeScreenId;
   const routeItemId = state.activeScreenId === 'item-detail' ? state.selectedItemId : null;
 
   /**
@@ -103,8 +106,9 @@ export default function JynxGate() {
    * האלמנט לפני שהוא גולל אליו — ראו CommentsPanel.
    */
   const goToCommentRoute = useCallback((comment) => {
-    const [persona, screenId] = String(comment.route || '').split(':');
+    const screenId = screenOf(comment.route);
     if (!screenId) return;
+    const persona = personaOf(comment);
     if (persona && persona !== state.currentPersona) store.switchPersona(persona);
     if (screenId === 'item-detail' && comment.routeItemId != null) {
       store.openItem(comment.routeItemId);
@@ -343,6 +347,7 @@ export default function JynxGate() {
         drawMode={drawMode}
         drawColor={drawColor}
         route={route}
+        routePersona={state.currentPersona}
         routeItemId={routeItemId}
         comments={comments}
         currentUser={user}

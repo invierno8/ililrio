@@ -6,6 +6,7 @@ import AnnotationMarkers from './AnnotationMarkers.jsx';
 import DrawingCanvas from './DrawingCanvas.jsx';
 import DrawingOverlay from './DrawingOverlay.jsx';
 import { hasHotkey, useHotkeyHeld, MODIFIERS } from './hotkey.js';
+import { sameScreen } from './route.js';
 
 /* ==================================================================
    מותקן פעם אחת, כל עוד יש משתמש מחובר. שלושה תפקידים, כמו ב-commando
@@ -27,7 +28,7 @@ function parseSecondaryTargetsFromComment(comment) {
   return found.slice(0, 10);
 }
 
-export default function DevOverlay({ hoverOn, markersOn, drawMode, drawColor, route, routeItemId, comments, currentUser, hotkey, onSubmit, onResolve, onDelete }) {
+export default function DevOverlay({ hoverOn, markersOn, drawMode, drawColor, route, routePersona, routeItemId, comments, currentUser, hotkey, onSubmit, onResolve, onDelete }) {
   // ההילה מופיעה רק כל עוד המקש מוחזק: מחזיקים, עוברים מעל, לוחצים ומעירים.
   // בלי זה כל תנועת עכבר על העמוד הייתה מציירת מסגרת, גם כשרק קוראים אותו.
   // העין נשארת המתג העליון — כבויה, אין הילה גם כשמחזיקים.
@@ -120,6 +121,7 @@ export default function DevOverlay({ hoverOn, markersOn, drawMode, drawColor, ro
   async function submit(comment) {
     await onSubmit({
       route,
+      routePersona,
       routeItemId,
       targetLabel: popover.label,
       targetPath: popover.path,
@@ -166,7 +168,7 @@ export default function DevOverlay({ hoverOn, markersOn, drawMode, drawColor, ro
       <DrawingCanvas active={drawMode && !popover} hotkey={hotkey} color={drawColor} onComplete={handleDrawingComplete} />
       <AnnotationMarkers
         active={markersOn}
-        comments={comments.filter((c) => c.route === route)}
+        comments={comments.filter((c) => sameScreen(c.route, route))}
         currentUserId={currentUser?.id}
         isAdmin={!!currentUser?.isAdmin}
         onResolve={onResolve}
