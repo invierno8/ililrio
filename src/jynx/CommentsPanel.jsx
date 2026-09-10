@@ -17,7 +17,10 @@ import DrawingOverlay from './DrawingOverlay.jsx';
    theme.css) במקום לכסות אותו, כך ששום דבר באתר לא מוסתר בזמן שהיא פתוחה.
    ================================================================== */
 
-const ARRANGE_KEY = 'jynx-comments-arrange';
+// המפתח ממוספר: ברירת המחדל השתנתה ל"לפי משתמש", ובלי מספר חדש מי שכבר
+// פתח את הפאנל פעם אחת היה נשאר עם הבחירה הישנה שנשמרה לו מאליה.
+const ARRANGE_KEY = 'jynx-comments-arrange:2';
+const DEFAULT_ARRANGE = 'user';
 
 export default function CommentsPanel({ comments, groups = [], route, currentUser, hotkeySymbol = 'Ctrl', onNavigate, onClose, onResolve, onDelete, onEdit, onReply, onGroup, onUngroup, onRenameGroup, onMoveToGroup }) {
   const [statusFilter, setStatusFilter] = useState('open');
@@ -36,8 +39,9 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
   // אף פעם לא מלחיצה על כותרת קבוצה: קליק על כותרת פותח וסוגר, וזה הכול.
   const [focus, setFocus] = useState(null); // { kind: 'group'|'author', id, label }
   // איך מסודרת הרשימה: none / groups / user. נשמר, כי זו העדפת קריאה.
+  // ברירת המחדל היא לפי משתמש — מי שנכנס רואה מיד מי כתב מה.
   const [arrange, setArrange] = useState(() => {
-    try { return localStorage.getItem(ARRANGE_KEY) || 'groups'; } catch { return 'groups'; }
+    try { return localStorage.getItem(ARRANGE_KEY) || DEFAULT_ARRANGE; } catch { return DEFAULT_ARRANGE; }
   });
   const [collapsed, setCollapsed] = useState({});
   const [dragId, setDragId] = useState(null);
