@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T11:00:04.804Z",
+  "updatedAt": "2026-09-10T11:01:11.258Z",
   "comments": [
     {
       "id": "c-e8337698",
@@ -72,6 +72,21 @@
       "secondaryTargets": [],
       "drawing": null,
       "comment": "זה יהיה בסודי רק לא? בכל אופן רמת סיווג צריכה להיקבע אוטומטית לפי הפלטפורמה או רק מתחת למה שאני נמצא כרגע, אם אני בסודי אז מוגבל ושמור כאופציות ובסודי ביותר סודי מתווסף",
+      "resolved": false,
+      "replies": []
+    },
+    {
+      "id": "c-be3bee5d",
+      "createdAt": "2026-09-10T11:01:11.258Z",
+      "authorId": "u-682f158037",
+      "authorName": "rio",
+      "route": "P2:add-item",
+      "targetLabel": "טופס פריט ייבוא אצווה הוספת פריט תצוגה מקדימה שמור טיוטה שלח…",
+      "targetPath": "0/1/1",
+      "targetKind": "block",
+      "secondaryTargets": [],
+      "drawing": null,
+      "comment": "זה מרגיש סקרול נורא ארוך, מלא נדלן לא מנוצל בצד המשאלי של התצוגה, אולי לפצל את זה ולהציג בשני מלבנים על המסך?",
       "resolved": false,
       "replies": []
     }
