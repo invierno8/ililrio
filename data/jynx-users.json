@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T11:32:20.494Z",
+  "updatedAt": "2026-09-10T11:32:22.701Z",
   "users": [
     {
       "id": "u-682f158037",
@@ -21,6 +21,16 @@
       "lastSeen": "2026-09-10T11:27:15.743Z",
       "salt": "16f53bdff2a77d508de56e738209a6f7",
       "hash": "e84da2218f6b2d37874112bfe1a49346a8cda9442e95012d822f8948839b3d32"
+    },
+    {
+      "id": "u-c313213c35",
+      "name": "Jynx",
+      "isAdmin": false,
+      "salt": "3e446bb8c74bd2bd98c14aae13973ce2",
+      "hash": "2b0ab51d3e03cf71cbfae36b017b2012595a234122bc57ad4d45c0963d48bbb2",
+      "addedBy": "rio",
+      "firstSeen": null,
+      "lastSeen": null
     }
   ]
 }
