@@ -1,14 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useKeepInViewport } from './useKeepInViewport.js';
+import PasswordForm from './PasswordForm.jsx';
 
 /* תפריט ה-"Hi" שבקצה הסרגל, כמו ב-commando (DevGreetingMenu.jsx): מי אתה,
    מה הקיצורים, ויציאה. הרשימה מגיעה מבחוץ ומחושבת מהסדר בפועל של הסרגל,
    כך שהמספרים תמיד נכונים ולא עותק שהתיישן. */
-export default function GreetingMenu({ user, shortcuts, onLogout }) {
+export default function GreetingMenu({ user, shortcuts, hotkeySymbol = 'Ctrl', onLogout }) {
   const [open, setOpen] = useState(false);
+  const [pwOpen, setPwOpen] = useState(false);
   const menuRef = useRef(null);
   const wrapRef = useRef(null);
-  useKeepInViewport(menuRef, open, 8, [shortcuts.length]);
+  useKeepInViewport(menuRef, open, 8, [shortcuts.length, pwOpen]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -30,7 +32,7 @@ export default function GreetingMenu({ user, shortcuts, onLogout }) {
           <span className="dev-greeting-role">{user.isAdmin ? 'Admin' : 'Commenter'}</span>
           <div className="dev-greeting-shortcuts">
             <span className="dev-greeting-shortcut">
-              <kbd>Ctrl/Cmd</kbd> + click — comment on any element
+              <kbd>{hotkeySymbol}</kbd> + click — comment on any element
             </span>
             {shortcuts.map((s) => (
               <span key={s.num} className="dev-greeting-shortcut">
@@ -38,6 +40,10 @@ export default function GreetingMenu({ user, shortcuts, onLogout }) {
               </span>
             ))}
           </div>
+          <button type="button" className="dev-greeting-logout" onClick={() => setPwOpen((v) => !v)}>
+            {pwOpen ? 'Close password' : 'Change my password'}
+          </button>
+          {pwOpen && <PasswordForm user={user} onDone={() => setPwOpen(false)} />}
           <button type="button" className="dev-greeting-logout" onClick={onLogout}>Sign out</button>
         </div>
       )}

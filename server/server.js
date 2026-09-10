@@ -3,8 +3,8 @@ import cors from 'cors';
 import crypto from 'node:crypto';
 import { readJson, writeJson, githubEnabled } from './github.js';
 import {
-  login, requireUser, requireAdmin, isAdminName, userIdFor, hashPassword,
-  ADMIN_NAMES, ADMIN_PASSWORDS_ARE_DEFAULT,
+  login, requireUser, requireAdmin, isAdminName, userIdFor, hashPassword, verifyPassword, passwordTaken,
+  ADMIN_NAMES, ADMIN_SEED_PASSWORD, ADMIN_PASSWORDS_ARE_DEFAULT,
 } from './auth.js';
 
 /**
@@ -42,6 +42,28 @@ async function boot() {
   comments = Array.isArray(doc.comments) ? doc.comments : [];
   const roster = await readJson(USERS_PATH, { version: 1, users: [] });
   users = Array.isArray(roster.users) ? roster.users : [];
+
+  // המנהלים חיים ברשימה כמו כולם, כדי שגם הם יוכלו להחליף סיסמה מתוך Jynx.
+  // בפעם הראשונה הסיסמה נלקחת ממשתנה הסביבה; מרגע שהוחלפה, הרשימה גוברת.
+  let seeded = false;
+  for (const name of ADMIN_NAMES) {
+    const id = userIdFor(name);
+    let record = users.find((u) => u.id === id);
+    if (!record) {
+      record = { id, name, isAdmin: true, addedBy: 'seed', firstSeen: null, lastSeen: null };
+      users.push(record);
+      seeded = true;
+    }
+    record.isAdmin = true;
+    if (!record.hash) {
+      Object.assign(record, hashPassword(ADMIN_SEED_PASSWORD(name)));
+      seeded = true;
+    }
+  }
+  if (seeded) {
+    try { await saveUsers('jynx: seed admin accounts'); } catch (err) { console.error('[jynx] seed failed:', err.message); }
+  }
+
   ready = true;
   if (ADMIN_PASSWORDS_ARE_DEFAULT) console.warn('[jynx] admin passwords are the temporary defaults');
   console.log(`[jynx] ready · ${comments.length} comments · ${users.length} users · github ${githubEnabled() ? 'on' : 'OFF (in-memory only)'}`);
@@ -180,12 +202,7 @@ app.delete('/api/jynx/comments/:id', requireUser, async (req, res) => {
 // ---- מעירים (מנהלים בלבד) ---------------------------------------------------
 
 app.get('/api/jynx/users', requireUser, requireAdmin, (req, res) => {
-  // המנהלים תמיד ברשימה, גם אם עוד לא נכנסו מהמכשיר הזה.
-  const shown = [...users];
-  ADMIN_NAMES.forEach((n) => {
-    if (!shown.some((u) => u.id === userIdFor(n))) shown.push({ id: userIdFor(n), name: n, isAdmin: true });
-  });
-  res.json({ users: shown.map(publicUser) });
+  res.json({ users: users.map(publicUser) });
 });
 
 app.post('/api/jynx/users', requireUser, requireAdmin, async (req, res) => {
@@ -195,6 +212,10 @@ app.post('/api/jynx/users', requireUser, requireAdmin, async (req, res) => {
   if (isAdminName(clean)) return res.status(400).json({ error: 'That name is an admin already' });
   if (users.some((u) => u.name.trim().toLowerCase() === clean.toLowerCase())) {
     return res.status(409).json({ error: 'That commenter already exists' });
+  }
+
+  if (passwordTaken(String(password), users)) {
+    return res.status(409).json({ error: 'Another user already signs in with that password — pick a different one' });
   }
 
   const { salt, hash } = hashPassword(password);
@@ -210,6 +231,39 @@ app.post('/api/jynx/users', requireUser, requireAdmin, async (req, res) => {
     return res.status(502).json({ error: 'Saved in memory but not to the repo' });
   }
   return res.status(201).json({ user: publicUser(record) });
+});
+
+/**
+ * החלפת סיסמה. משתמש מחליף את שלו ומאשר בסיסמה הנוכחית; מנהל מחליף לכל אחד
+ * בלי לדעת את הישנה. בשני המקרים סיסמה שכבר שייכת למישהו נדחית — היא הזהות,
+ * ושתי זהויות עם אותה סיסמה היו מתנגשות.
+ */
+app.patch('/api/jynx/users/:id/password', requireUser, async (req, res) => {
+  const { currentPassword, newPassword } = req.body || {};
+  const target = users.find((u) => u.id === req.params.id);
+  if (!target) return res.status(404).json({ error: 'No such user' });
+
+  const isSelf = target.id === req.user.id;
+  if (!isSelf && !req.user.isAdmin) return res.status(403).json({ error: 'You can only change your own password' });
+  if (!newPassword || String(newPassword).trim().length < 3) {
+    return res.status(400).json({ error: 'New password must be at least 3 characters' });
+  }
+  if (isSelf && !req.user.isAdmin && !verifyPassword(currentPassword, target)) {
+    return res.status(403).json({ error: 'Current password is wrong' });
+  }
+  if (passwordTaken(String(newPassword), users, target.id)) {
+    return res.status(409).json({ error: 'Another user already signs in with that password — pick a different one' });
+  }
+
+  Object.assign(target, hashPassword(String(newPassword)));
+  target.passwordChangedAt = new Date().toISOString();
+  try {
+    await saveUsers(`jynx: ${req.user.name} changed the password for ${target.name}`);
+  } catch (err) {
+    console.error('[jynx] user save failed:', err.message);
+    return res.status(502).json({ error: 'Saved in memory but not to the repo' });
+  }
+  return res.json({ user: publicUser(target) });
 });
 
 app.delete('/api/jynx/users/:id', requireUser, requireAdmin, async (req, res) => {

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Trash2, UserPlus } from 'lucide-react';
+import { X, Trash2, UserPlus, KeyRound } from 'lucide-react';
 import { listUsers, createUser, deleteUser } from './devApi.js';
+import PasswordForm from './PasswordForm.jsx';
 
 /**
  * מי יכול להעיר. Tom ו-ilil הם מנהלים קבועים; כל שאר המעירים נוספים כאן,
@@ -16,6 +17,7 @@ export default function UsersPanel({ onClose }) {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [pwFor, setPwFor] = useState(null);
 
   const load = () => listUsers().then(setUsers).catch((e) => setError(e.message));
   useEffect(() => { load(); }, []);
@@ -79,11 +81,15 @@ export default function UsersPanel({ onClose }) {
             <span className="comments-sidebar-item-meta">
               {u.lastSeen ? `last seen ${new Date(u.lastSeen).toLocaleDateString('en-US')}` : 'never signed in'}
             </span>
-            {!u.isAdmin && (
-              <div className="comments-edit-actions" style={{ justifyContent: 'flex-start' }}>
+            <div className="comments-edit-actions" style={{ justifyContent: 'flex-start' }}>
+              <button type="button" onClick={() => setPwFor((cur) => (cur === u.id ? null : u.id))}>
+                <KeyRound size={11} /> Password
+              </button>
+              {!u.isAdmin && (
                 <button type="button" onClick={() => remove(u)}><Trash2 size={11} /> Remove</button>
-              </div>
-            )}
+              )}
+            </div>
+            {pwFor === u.id && <PasswordForm user={u} asAdmin onDone={() => setPwFor(null)} />}
           </div>
         ))}
       </div>

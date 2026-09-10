@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useHoverTarget, labelForElement, pathForElement, findTarget } from './useHoverTarget.js';
 import AnnotationPopover from './AnnotationPopover.jsx';
 import AnnotationMarkers from './AnnotationMarkers.jsx';
+import { hasHotkey, MODIFIERS } from './hotkey.js';
 
 /* ==================================================================
    מותקן פעם אחת, כל עוד יש משתמש מחובר. שלושה תפקידים, כמו ב-commando
@@ -24,7 +25,7 @@ function parseSecondaryTargetsFromComment(comment) {
   return found.slice(0, 10);
 }
 
-export default function DevOverlay({ hoverOn, markersOn, route, comments, currentUser, onSubmit, onResolve, onDelete }) {
+export default function DevOverlay({ hoverOn, markersOn, route, comments, currentUser, hotkey, onSubmit, onResolve, onDelete }) {
   const target = useHoverTarget(hoverOn, true);
   const [popover, setPopover] = useState(null); // { x, y, label, path, secondaryTargets: [] } | null
   const isJynxHover = !!target?.closest('.jynx-chrome');
@@ -46,7 +47,7 @@ export default function DevOverlay({ hoverOn, markersOn, route, comments, curren
       const el = realElementAtPoint(e.clientX, e.clientY);
 
       if (popover) {
-        if (!(e.ctrlKey || e.metaKey)) return;
+        if (!hasHotkey(e, hotkey)) return;
         if (!el) return;
         e.preventDefault();
         e.stopPropagation();
@@ -59,7 +60,7 @@ export default function DevOverlay({ hoverOn, markersOn, route, comments, curren
         return;
       }
 
-      if (!(e.ctrlKey || e.metaKey)) return;
+      if (!hasHotkey(e, hotkey)) return;
       if (!el) return;
       e.preventDefault();
       e.stopPropagation();
@@ -81,7 +82,7 @@ export default function DevOverlay({ hoverOn, markersOn, route, comments, curren
       window.removeEventListener('click', onClickCapture, true);
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [target, popover]);
+  }, [target, popover, hotkey]);
 
   const rect = hoverOn ? target?.getBoundingClientRect() : null;
 
@@ -113,6 +114,7 @@ export default function DevOverlay({ hoverOn, markersOn, route, comments, curren
           y={popover.y}
           label={popover.label}
           secondaryTargets={popover.secondaryTargets}
+          hotkeySymbol={(MODIFIERS[hotkey] || MODIFIERS.ctrl).symbol}
           onCancel={() => setPopover(null)}
           onSubmit={submit}
         />

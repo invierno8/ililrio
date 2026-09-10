@@ -18,7 +18,9 @@ import { elementForComment } from './useHoverTarget.js';
    ה-Action. זו גרסת הערות בלבד, ולכן נשארו שני מצבים — פתוח וטופל.
    ================================================================== */
 
-const COLOR_OPEN = 'var(--red)';
+// פתוחה סגולה, טופלה ירוקה. ב-commando הפתוחה אדומה כי שם הצבע מסמן סטטוס
+// בתוך תור פעולות; כאן אין תור, ולכן הצבע הוא פשוט של Jynx.
+const COLOR_OPEN = 'var(--jynx)';
 const COLOR_DONE = 'var(--green)';
 
 export default function AnnotationMarkers({ active, comments, currentUserId, isAdmin, onResolve, onDelete }) {

@@ -10,6 +10,8 @@ import DevOverlay from './DevOverlay.jsx';
 import CommentsPanel from './CommentsPanel.jsx';
 import GreetingMenu from './GreetingMenu.jsx';
 import UsersPanel from './UsersPanel.jsx';
+import HotkeyHint from './HotkeyHint.jsx';
+import { useHotkeyModifier, MODIFIERS } from './hotkey.js';
 import './theme.css';
 
 /* ==================================================================
@@ -65,6 +67,7 @@ export default function JynxGate() {
   const [markersOn, setMarkersOn] = useState(() => loadFlag(MARKERS_ON_KEY, true));
   const [commentsOn, setCommentsOn] = useState(false);
   const [usersOpen, setUsersOpen] = useState(false);
+  const [hotkey, setHotkey] = useHotkeyModifier();
 
   const lockedFab = useDraggableFab('jynx-locked-fab-pos');
   const toolbarFab = useDraggableFab('jynx-toolbar-pos');
@@ -165,10 +168,18 @@ export default function JynxGate() {
     setUsersOpen(false);
   }
 
-  // כתיבה אופטימית — ההערה על המסך מיד, ואחריה סנכרון מהשירות.
+  /**
+   * מיזוג לפי מזהה, ולא דחיפה לסוף. שמירת הערה כוללת commit ל-GitHub ולכן
+   * לוקחת כמה שניות, והפולינג של שש השניות נוחת באמצע — השרת כבר מחזיק את
+   * ההערה, אבל התשובה ל-POST עוד לא חזרה. דחיפה עיוורת הייתה מוסיפה אותה
+   * פעם שנייה, וזו הייתה הכפילות שכל הערה סבלה ממנה.
+   */
+  const mergeComment = (saved) => setComments((prev) => (
+    prev.some((c) => c.id === saved.id) ? prev.map((c) => (c.id === saved.id ? saved : c)) : [...prev, saved]
+  ));
+
   async function handleSubmit(payload) {
-    const saved = await submitAnnotation(payload);
-    setComments((prev) => [...prev, saved]);
+    mergeComment(await submitAnnotation(payload));
   }
   async function handleResolve(a, resolved) {
     setComments((prev) => prev.map((c) => (c.id === a.id ? { ...c, resolved } : c)));
@@ -184,7 +195,7 @@ export default function JynxGate() {
   }
   async function handleReply(a, body) {
     const saved = await replyToAnnotation(a.id, body).catch(() => null);
-    if (saved) setComments((prev) => prev.map((c) => (c.id === a.id ? saved : c)));
+    if (saved) mergeComment(saved);
     else refresh();
   }
 
@@ -289,6 +300,7 @@ export default function JynxGate() {
         route={route}
         comments={comments}
         currentUser={user}
+        hotkey={hotkey}
         onSubmit={handleSubmit}
         onResolve={handleResolve}
         onDelete={handleDelete}
@@ -328,14 +340,12 @@ export default function JynxGate() {
                 </div>
               )
             ))}
-            <GreetingMenu user={user} shortcuts={shortcuts} onLogout={logout} />
+            <GreetingMenu user={user} shortcuts={shortcuts} hotkeySymbol={MODIFIERS[hotkey].symbol} onLogout={logout} />
             <button type="button" className="dev-toolbar-icon-btn" data-devblock="jynx-toolbar-collapse-btn" onClick={() => setToolbarOpen(false)} title="Collapse to the Jynx bubble">
               <X size={13} />
             </button>
           </div>
-          <div className="jynx-hotkey-hint jynx-chrome jynx-ui">
-            <span className="jynx-hotkey-hint-text">Ctrl/Cmd+click any element to comment</span>
-          </div>
+          <HotkeyHint modifier={hotkey} onChange={setHotkey} />
         </div>
       ) : (
         <div className="dev-fab-wrap jynx-chrome jynx-ui" style={{ right: toolbarFab.pos.right, bottom: toolbarFab.pos.bottom }}>

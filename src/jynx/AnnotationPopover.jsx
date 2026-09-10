@@ -13,7 +13,7 @@ import { useDraggableFab } from './useDraggableFab.js';
    השליחה, לא ממערך נפרד, כך שהטקסט הוא תמיד מקור האמת היחיד.
 
    גרירה: useDraggableFab — אותו hook בדיוק כמו הפאנל והסרגל. */
-export default function AnnotationPopover({ x, y, label, secondaryTargets, onCancel, onSubmit }) {
+export default function AnnotationPopover({ x, y, label, secondaryTargets, hotkeySymbol = 'Ctrl', onCancel, onSubmit }) {
   const [comment, setComment] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
@@ -89,7 +89,7 @@ export default function AnnotationPopover({ x, y, label, secondaryTargets, onCan
         onChange={(e) => setComment(e.target.value)}
       />
       <div className="dev-annotate-picking-hint">
-        Ctrl/Cmd+click any element on screen to link it here — it&apos;ll appear as a tag in your comment
+        {hotkeySymbol}+click any element on screen to link it here — it&apos;ll appear as a tag in your comment
         {secondaryTargets.length > 0 && ` (${secondaryTargets.length} linked)`}
       </div>
       {error && <div className="dev-login-error">{error}</div>}

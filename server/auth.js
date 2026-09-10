@@ -28,6 +28,7 @@ const ADMINS = {
 };
 
 export const ADMIN_NAMES = Object.keys(ADMINS);
+export const ADMIN_SEED_PASSWORD = (name) => ADMINS[String(name).toLowerCase()];
 export const ADMIN_PASSWORDS_ARE_DEFAULT = !process.env.JYNX_PASSWORD_TOM && !process.env.JYNX_PASSWORD_ILIL;
 
 const SECRET = process.env.JYNX_SESSION_SECRET || '';
@@ -42,6 +43,10 @@ export function userIdFor(name) {
 }
 
 // ---- סיסמאות ---------------------------------------------------------------
+
+export function verifyPassword(password, record) {
+  return verifyHashed(password, record);
+}
 
 export function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString('hex');
@@ -89,27 +94,27 @@ export function verify(token) {
   }
 }
 
+/** האם הסיסמה הזו כבר שייכת למישהו? הסיסמה היא הזהות, ולכן שתי זהויות עם
+ *  אותה סיסמה היו מתנגשות — מי שנכנס היה מקבל את החשבון של השני. */
+export function passwordTaken(password, roster, exceptId) {
+  return roster.some((u) => u.id !== exceptId && verifyHashed(password, u));
+}
+
 /**
  * מחזיר { user, token } או { error }.
  *
  * הסיסמה היא גם הזהות — בדיוק כמו ב-commando, שם הכניסה היא שדה סיסמה יחיד.
- * כל מעיר מקבל סיסמה משלו, והשרת יודע לפיה מי נכנס; אין שדה שם למלא.
+ * כל מי שברשימה מחזיק סיסמה משלו, והשרת יודע לפיה מי נכנס.
  */
 export function login(password, roster) {
   if (!SECRET) return { error: 'Service misconfigured: JYNX_SESSION_SECRET is missing' };
   const given = String(password || '');
   if (!given) return { error: 'Password required' };
 
-  const adminName = ADMIN_NAMES.find((n) => samePassword(given, ADMINS[n]));
-  if (adminName) {
-    const user = { id: userIdFor(adminName), name: adminName, isAdmin: true };
-    return { user, token: sign({ ...user, exp: Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000 }) };
-  }
-
-  const known = roster.find((u) => !u.isAdmin && verifyHashed(given, u));
+  const known = roster.find((u) => verifyHashed(given, u));
   if (!known) return { error: 'Wrong password' };
 
-  const user = { id: known.id, name: known.name, isAdmin: false };
+  const user = { id: known.id, name: known.name, isAdmin: !!known.isAdmin };
   return { user, token: sign({ ...user, exp: Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000 }) };
 }
 

@@ -103,6 +103,13 @@ export async function createUser(name, password) {
   return (await call('/api/jynx/users', { method: 'POST', body: JSON.stringify({ name, password }) })).user;
 }
 
+export async function changePassword(id, { currentPassword, newPassword }) {
+  return (await call(`/api/jynx/users/${id}/password`, {
+    method: 'PATCH',
+    body: JSON.stringify({ currentPassword, newPassword }),
+  })).user;
+}
+
 export async function deleteUser(id) {
   await call(`/api/jynx/users/${id}`, { method: 'DELETE' });
 }

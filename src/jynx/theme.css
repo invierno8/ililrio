@@ -28,7 +28,10 @@
   --danger: #E85A4D;
   --info: #4A9EDA;
   --jynx: #9B82FF;
-  --dev: var(--warn);
+  /* ב-commando --dev הוא ענבר, והוא צובע את קופסת התגובה ואת שדות הכניסה.
+     כאן הכול סגול לפי בקשה — משאירים את השם כדי שהכללים שהועברו משם יישארו
+     זהים לחלוטין, ורק הצבע שמאחוריו משתנה. */
+  --dev: var(--jynx);
   --red: var(--danger);
   --green: var(--accent);
   --shadow-sm: 0 4px 12px rgba(0, 0, 0, .35);
@@ -183,7 +186,20 @@
   background: none; border: none; color: var(--jynx); font-size: 10.5px; font-weight: 700; cursor: pointer;
   padding: 0; text-decoration: underline; text-underline-offset: 2px; font-family: var(--font-mono);
 }
-.jynx-hotkey-current:hover { color: var(--dev); }
+.jynx-hotkey-current:hover { color: color-mix(in srgb, var(--jynx) 60%, #fff); }
+.jynx-hotkey-capture {
+  position: absolute; bottom: calc(100% + 6px); right: 0; min-width: 210px;
+  background: var(--panel); border: 1px solid var(--jynx); border-radius: 10px; padding: 10px;
+  display: flex; flex-direction: column; gap: 5px; box-shadow: var(--shadow-md);
+  animation: devAnnotateIn .12s ease; z-index: 2; text-align: center;
+}
+.jynx-hotkey-capture-title { font-size: 11.5px; font-weight: 700; color: var(--text); }
+.jynx-hotkey-capture-hint { font-size: 10.5px; color: var(--text-dim); line-height: 1.4; }
+.jynx-hotkey-capture-keys {
+  font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--jynx);
+  padding: 6px 0; animation: devAdminPulse 1.2s ease-in-out infinite;
+}
+.jynx-hotkey-capture-error { font-size: 10.5px; color: var(--red); }
 .jynx-hotkey-picker {
   position: absolute; top: 100%; margin-top: 4px; right: 0; min-width: 190px; background: var(--panel);
   border: 1px solid var(--jynx); border-radius: 10px; padding: 6px; display: flex; flex-direction: column; gap: 2px;
@@ -303,8 +319,8 @@
 .admin-marker-dot-quiet { opacity: .5; }
 .marker-anim-none { animation: markerBreatheNone 2.6s ease-in-out infinite; }
 @keyframes markerBreatheNone {
-  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--red) 45%, transparent); }
-  50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--red) 0%, transparent); }
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--jynx) 55%, transparent); }
+  50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--jynx) 0%, transparent); }
 }
 .marker-anim-done { animation: markerGlowDone 2.4s ease-in-out infinite; }
 @keyframes markerGlowDone {
@@ -446,3 +462,15 @@ body.jynx-side-open { --jynx-side-offset: var(--jynx-side-width); }
   .rio-shell { transition: none; }
   .dev-overlay-highlight, .admin-marker-highlight, .comments-panel-highlight { transition: none; }
 }
+
+/* ---------- החלפת סיסמה ---------- */
+
+.jynx-pw-form { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-top: 1px solid var(--line); }
+.jynx-pw-form input {
+  width: 100%; box-sizing: border-box;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px;
+  color: var(--text); font-family: var(--font-mono); font-size: 12px; outline: none;
+}
+.jynx-pw-form input:focus { border-color: var(--jynx); }
+.jynx-pw-note { font-size: 10.5px; color: var(--text-dim); line-height: 1.4; }
+.jynx-pw-ok { font-size: 10.5px; color: var(--green); }
