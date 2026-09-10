@@ -102,7 +102,7 @@ export default function DevOverlay({ hoverOn, markersOn, route, comments, curren
   }
 
   return createPortal(
-    <div className="dev-overlay-ignore">
+    <div className="dev-overlay-ignore jynx-ui">
       {rect && (
         <div
           className={
@@ -110,7 +110,11 @@ export default function DevOverlay({ hoverOn, markersOn, route, comments, curren
             + (pickingSecondary ? ' dev-overlay-highlight-secondary' : isJynxHover ? ' dev-overlay-highlight-jynx' : '')
           }
           style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
-        />
+        >
+          {/* מה בדיוק ייתפס כשלוחצים. בלי זה ההילה מראה גבול אבל לא אומרת על
+              מה מעירים — וזה בדיוק מה שנשמר עם ההערה כ-targetLabel. */}
+          <span className={'dev-overlay-highlight-label' + (rect.top < 26 ? ' dev-overlay-highlight-label-below' : '')}>{labelForElement(target)}</span>
+        </div>
       )}
       {popover && (
         <AnnotationPopover

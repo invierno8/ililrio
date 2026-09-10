@@ -63,7 +63,7 @@ export default function CommentsPanel({ comments, route, currentUser, hotkeySymb
   return createPortal(
     <>
       {/* הילות על העמוד החי — עזר ריחוף בלבד, אף פעם לא יעד תקין להערה. */}
-      <div className="dev-overlay-ignore">
+      <div className="dev-overlay-ignore jynx-ui">
         {hoveredRect && (
           <div className="comments-panel-highlight" style={{ top: hoveredRect.top, left: hoveredRect.left, width: hoveredRect.width, height: hoveredRect.height }} />
         )}

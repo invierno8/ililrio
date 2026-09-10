@@ -15,6 +15,25 @@ import { useEffect, useRef, useState } from 'react';
 
 const ROOT_SELECTOR = '#root';
 
+/**
+ * רמזי מחלקה, בדיוק כמו FALLBACK_CLASS_HINTS ב-commando — שם הרשימה מונה את
+ * הפרימיטיבים של אותו פרויקט, וכאן את אלה של מערכת העיצוב שהדמו בנוי ממנה.
+ * בלעדיהם ההילה נעצרת על ה-flex הפנימי הראשון: ריחוף מעל כרטיס היה מסמן את
+ * גוף הכרטיס בלבד במקום את הכרטיס כולו.
+ */
+const FALLBACK_CLASS_HINTS = [
+  'ht-card', 'ht-btn', 'ht-action', 'ht-search', 'ht-select', 'ht-input', 'ht-check',
+  'ht-radio', 'ht-modal', 'ht-drawer', 'ht-toast', 'ht-badge', 'ht-tab', 'ht-crumbs',
+  'ht-pager', 'ht-qty', 'ht-spec', 'rio-screen',
+];
+
+function hasHintClass(el) {
+  const cls = el.className;
+  if (typeof cls !== 'string' || !cls) return false;
+  const list = cls.split(/\s+/);
+  return FALLBACK_CLASS_HINTS.some((c) => list.includes(c));
+}
+
 export function isJynxChrome(el) {
   return !!(el && el.closest && el.closest('.jynx-chrome'));
 }
@@ -23,6 +42,12 @@ export function findTarget(el) {
   let node = el;
   while (node && node !== document.body) {
     if (node.dataset && node.dataset.devblock) return node;
+    node = node.parentElement;
+  }
+  // מעבר שני, נפרד: רכיב של מערכת העיצוב מנצח כל flex פנימי שבדרך אליו.
+  node = el;
+  while (node && node !== document.body) {
+    if (hasHintClass(node)) return node;
     node = node.parentElement;
   }
   node = el;

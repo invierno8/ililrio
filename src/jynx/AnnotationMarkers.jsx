@@ -131,7 +131,7 @@ function MarkerDot({ list, rect, open, currentUserId, isAdmin, onToggle, onResol
     <>
       {/* עזרי הובר בלבד — אף פעם לא יעד תקין להערה. */}
       {hovered && (
-        <div className="dev-overlay-ignore">
+        <div className="dev-overlay-ignore jynx-ui">
           <div
             className="admin-marker-highlight"
             style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}

@@ -474,3 +474,18 @@ body.jynx-side-open { --jynx-side-offset: var(--jynx-side-width); }
 .jynx-pw-form input:focus { border-color: var(--jynx); }
 .jynx-pw-note { font-size: 10.5px; color: var(--text-dim); line-height: 1.4; }
 .jynx-pw-ok { font-size: 10.5px; color: var(--green); }
+
+/* שם האלמנט שמתחת לסמן, על ההילה עצמה — זה גם מה שנשמר עם ההערה כ-targetLabel.
+   inset-inline-start ולא left: הדמו RTL, וההילה יושבת עליו. */
+.dev-overlay-highlight-label {
+  position: absolute; top: -21px; inset-inline-start: -2px;
+  max-width: min(360px, 90vw); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  background: var(--jynx); color: #0A0B0C;
+  font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; letter-spacing: .02em;
+  padding: 2px 7px; border-radius: 5px;
+  direction: ltr; unicode-bidi: plaintext;
+}
+/* כשההילה נוגעת בקצה העליון של המסך, התווית עוברת פנימה כדי לא להיחתך. */
+.dev-overlay-highlight-label-below { top: auto; bottom: -21px; }
+.dev-overlay-highlight-jynx .dev-overlay-highlight-label { background: var(--dev); }
+.dev-overlay-highlight-secondary .dev-overlay-highlight-label { background: #2F8FCE; color: #fff; }
