@@ -1,5 +1,19 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-09T21:37:51.252Z",
-  "comments": []
+  "updatedAt": "2026-09-10T09:57:20.473Z",
+  "comments": [
+    {
+      "id": "c-1ed57e07",
+      "createdAt": "2026-09-10T09:57:20.473Z",
+      "authorId": "u-e1608f75c5",
+      "authorName": "tom",
+      "route": "P1:catalog",
+      "targetLabel": "תמונה",
+      "targetPath": "0/1/1/0/1/1/0",
+      "secondaryTargets": [],
+      "comment": "fasfas",
+      "resolved": false,
+      "replies": []
+    }
+  ]
 }
