@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T13:26:03.520Z",
+  "updatedAt": "2026-09-10T13:26:16.123Z",
   "users": [
     {
       "id": "u-682f158037",
@@ -30,7 +30,7 @@
       "hash": "9ec0deeee18f69cceb25dbd74fb8cf24be7c8a70b742cb90ec46e24406e2e6d0",
       "addedBy": "rio",
       "firstSeen": null,
-      "lastSeen": null
+      "lastSeen": "2026-09-10T13:26:16.122Z"
     }
   ]
 }
