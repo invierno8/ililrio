@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T11:27:20.592Z",
+  "updatedAt": "2026-09-10T11:27:32.318Z",
   "comments": [
     {
       "id": "c-e8337698",
@@ -102,22 +102,6 @@
       "secondaryTargets": [],
       "drawing": null,
       "comment": "אצווה?",
-      "resolved": false,
-      "replies": []
-    },
-    {
-      "id": "c-480d9500",
-      "createdAt": "2026-09-10T11:27:20.592Z",
-      "authorId": "u-fb97eb31da",
-      "authorName": "ilil",
-      "route": "catalog",
-      "routeItemId": null,
-      "targetLabel": "תמונה",
-      "targetPath": "0/1/1/0/1/0/0",
-      "targetKind": "text",
-      "secondaryTargets": [],
-      "drawing": null,
-      "comment": "CROSS-USER-1789039639602",
       "resolved": false,
       "replies": []
     }
