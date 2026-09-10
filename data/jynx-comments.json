@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T10:59:01.334Z",
+  "updatedAt": "2026-09-10T11:00:04.804Z",
   "comments": [
     {
       "id": "c-e8337698",
@@ -57,6 +57,21 @@
       "secondaryTargets": [],
       "drawing": null,
       "comment": "אישור של מה? מה אני מאשר במצב הזה",
+      "resolved": false,
+      "replies": []
+    },
+    {
+      "id": "c-469e1cee",
+      "createdAt": "2026-09-10T11:00:04.804Z",
+      "authorId": "u-682f158037",
+      "authorName": "rio",
+      "route": "P2:add-item",
+      "targetLabel": "רמת סיווג * בחר רמת סיווג הצעה · ממצא 1",
+      "targetPath": "0/1/1/0/1/1/1/1/2",
+      "targetKind": "block",
+      "secondaryTargets": [],
+      "drawing": null,
+      "comment": "זה יהיה בסודי רק לא? בכל אופן רמת סיווג צריכה להיקבע אוטומטית לפי הפלטפורמה או רק מתחת למה שאני נמצא כרגע, אם אני בסודי אז מוגבל ושמור כאופציות ובסודי ביותר סודי מתווסף",
       "resolved": false,
       "replies": []
     }
