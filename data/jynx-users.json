@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T11:26:19.242Z",
+  "updatedAt": "2026-09-10T11:27:08.031Z",
   "users": [
     {
       "id": "u-682f158037",
       "name": "rio",
       "isAdmin": true,
       "firstSeen": "2026-09-09T21:00:16.795Z",
-      "lastSeen": "2026-09-10T10:55:54.993Z",
+      "lastSeen": "2026-09-10T11:27:08.031Z",
       "salt": "59b3734bd5231ce6b1c73faddb332f36",
       "hash": "76d3a564c6cdbde7a9f5a3d122ac63d1b3eaa9a95c0d36ea018ba6fda80a31fa",
       "renamedFrom": "tom"
