@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T11:01:11.258Z",
+  "updatedAt": "2026-09-10T11:01:20.825Z",
   "comments": [
     {
       "id": "c-e8337698",
@@ -87,6 +87,21 @@
       "secondaryTargets": [],
       "drawing": null,
       "comment": "זה מרגיש סקרול נורא ארוך, מלא נדלן לא מנוצל בצד המשאלי של התצוגה, אולי לפצל את זה ולהציג בשני מלבנים על המסך?",
+      "resolved": false,
+      "replies": []
+    },
+    {
+      "id": "c-d02db25c",
+      "createdAt": "2026-09-10T11:01:20.825Z",
+      "authorId": "u-682f158037",
+      "authorName": "rio",
+      "route": "P2:add-item",
+      "targetLabel": "ייבוא אצווה",
+      "targetPath": "0/0/1/2/2",
+      "targetKind": "block",
+      "secondaryTargets": [],
+      "drawing": null,
+      "comment": "אצווה?",
       "resolved": false,
       "replies": []
     }
