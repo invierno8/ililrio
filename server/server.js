@@ -220,6 +220,43 @@ app.delete('/api/jynx/comments/:id', requireUser, async (req, res) => {
   return res.status(204).end();
 });
 
+/**
+ * פעולה אחת על כמה הערות בבת אחת — מחיקה או סימון כטופל.
+ *
+ * כל כתיבה כאן היא commit ל-GitHub, ולכן מחיקה של חמש הערות בחמש קריאות
+ * הייתה חמישה commits ורבע דקה של המתנה. כאן זה שינוי אחד ושמירה אחת.
+ * ההרשאות נשארות כפי שהן בפעולה הבודדת: מחיקה למנהל או לכותב של כל אחת
+ * מההערות, וסימון כטופל למנהלים בלבד.
+ */
+app.post('/api/jynx/comments/bulk', requireUser, async (req, res) => {
+  const { op, ids, resolved } = req.body || {};
+  const wanted = Array.isArray(ids) ? ids.filter((id) => typeof id === 'string').slice(0, 500) : [];
+  if (!wanted.length) return res.status(400).json({ error: 'No comments given' });
+
+  const targets = comments.filter((c) => wanted.includes(c.id));
+  if (!targets.length) return res.status(404).json({ error: 'Not found' });
+
+  if (op === 'delete') {
+    if (targets.some((c) => !canManage(req, c))) {
+      return res.status(403).json({ error: 'You can only delete your own comments' });
+    }
+    const ownIds = new Set(targets.map((c) => c.id));
+    comments = comments.filter((c) => !ownIds.has(c.id));
+  } else if (op === 'resolve') {
+    if (!req.user.isAdmin) return res.status(403).json({ error: 'Only admins can mark comments done' });
+    for (const c of targets) c.resolved = !!resolved;
+  } else {
+    return res.status(400).json({ error: 'Unknown bulk operation' });
+  }
+
+  try {
+    await saveComments(`jynx: ${req.user.name} ${op === 'delete' ? 'deleted' : 'updated'} ${targets.length} comments`);
+  } catch (err) {
+    console.error('[jynx] save failed:', err.message);
+  }
+  return res.json({ ids: targets.map((c) => c.id) });
+});
+
 // ---- קבוצות של הערות --------------------------------------------------------
 
 /**

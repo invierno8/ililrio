@@ -4,7 +4,7 @@ import { useRio } from '../store/index.js';
 import { useIsNarrow } from '../components/DesktopOnly.jsx';
 import {
   jynxConfigured, jynxLogin, jynxLogout, fetchMe, fetchThread, submitAnnotation, editAnnotation,
-  resolveAnnotation, replyToAnnotation, deleteAnnotation, setCommentGroup, createGroup, renameGroup, deleteGroup,
+  resolveAnnotation, replyToAnnotation, deleteAnnotation, bulkComments, setCommentGroup, createGroup, renameGroup, deleteGroup,
 } from './devApi.js';
 import { useDraggableFab } from './useDraggableFab.js';
 import { useKeepInViewport } from './useKeepInViewport.js';
@@ -263,6 +263,23 @@ export default function JynxGate() {
     await editAnnotation(a.id, comment).catch(() => refresh());
     markLocalWrite();
   }
+  // פעולות על אוסף נבחר. שמירה אחת בשירות במקום אחת לכל הערה — ראו
+  // /api/jynx/comments/bulk.
+  async function handleBulkDelete(ids) {
+    markLocalWrite();
+    const gone = new Set(ids);
+    setComments((prev) => prev.filter((c) => !gone.has(c.id)));
+    await bulkComments('delete', ids).catch(() => refresh());
+    markLocalWrite();
+  }
+  async function handleBulkResolve(ids, resolved) {
+    markLocalWrite();
+    const hit = new Set(ids);
+    setComments((prev) => prev.map((c) => (hit.has(c.id) ? { ...c, resolved } : c)));
+    await bulkComments('resolve', ids, { resolved }).catch(() => refresh());
+    markLocalWrite();
+  }
+
   // קיבוץ: כל פעולה מעדכנת מיד על המסך, ואז מסתנכרנת מהשירות.
   /** מיזוג לפי מזהה, כמו בהערות — אף פעם לא דחיפה עיוורת לסוף. */
   const mergeGroup = (saved) => setGroups((prev) => (
@@ -438,6 +455,8 @@ export default function JynxGate() {
           onEdit={handleEdit}
           onReply={handleReply}
           onGroup={handleGroup}
+          onBulkDelete={handleBulkDelete}
+          onBulkResolve={handleBulkResolve}
           onMoveToGroup={handleMoveToGroup}
           onRenameGroup={handleRenameGroup}
           onUngroup={handleUngroup}

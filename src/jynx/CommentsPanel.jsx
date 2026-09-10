@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { MessageSquare, X, Search, CheckCircle2, Pencil, Trash2, CornerDownRight, ChevronDown, ChevronRight, Sparkles, Filter, Users } from 'lucide-react';
+import { MessageSquare, X, Search, CheckCircle2, Pencil, Trash2, CornerDownRight, ChevronDown, ChevronRight, Sparkles, Filter, Users, ListChecks, Copy, Download, FolderPlus, CheckSquare, Square } from 'lucide-react';
 import { elementForComment } from './useHoverTarget.js';
 import { sameScreen, screenOf, personaOf } from './route.js';
 import JynxSuggestionBadge, { isJynxAuthor } from './JynxSuggestionBadge.jsx';
 import { sectionsFor, ARRANGEMENTS, NEW_GROUP_NAME, AUTO_JYNX_GROUP } from './grouping.js';
 import DrawingOverlay from './DrawingOverlay.jsx';
 import DragHint from './DragHint.jsx';
+import { downloadCsv, copyMarkdown } from './exportComments.js';
 
 /* ==================================================================
    פאנל ההערות. התוכן והפילטרים הם של commando (overlay/CommentsPanel.jsx)
@@ -24,7 +25,7 @@ const ARRANGE_KEY = 'jynx-comments-arrange:2';
 const DEFAULT_ARRANGE = 'user';
 const DRAG_HINT_KEY = 'jynx-drag-hint-done';
 
-export default function CommentsPanel({ comments, groups = [], route, currentUser, hotkeySymbol = 'Ctrl', onNavigate, onClose, onResolve, onDelete, onEdit, onReply, onGroup, onUngroup, onRenameGroup, onMoveToGroup }) {
+export default function CommentsPanel({ comments, groups = [], route, currentUser, hotkeySymbol = 'Ctrl', onNavigate, onClose, onResolve, onDelete, onEdit, onReply, onGroup, onUngroup, onRenameGroup, onMoveToGroup, onBulkDelete, onBulkResolve }) {
   const [statusFilter, setStatusFilter] = useState('open');
   // ברירת המחדל היא הכול, לא המסך הנוכחי: מי שנכנס אמור לראות מיד שיש חוט,
   // ולא מסך ריק רק מפני שההערות נכתבו במקום אחר.
@@ -51,6 +52,22 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
   const [hintDone, setHintDone] = useState(() => {
     try { return localStorage.getItem(DRAG_HINT_KEY) === '1'; } catch { return false; }
   });
+  // בחירה מרובה ופעולות עליה — למנהלים. אוסף של מזהים, ולא של הערות עצמן,
+  // כדי שרענון מהשירות לא ישאיר בידיים עותקים ישנים.
+  const [selecting, setSelecting] = useState(false);
+  const [selected, setSelected] = useState(() => new Set());
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [flash2, setFlash2] = useState('');
+  const isAdmin = !!currentUser?.isAdmin;
+
+  const say = (msg) => { setFlash2(msg); setTimeout(() => setFlash2((m) => (m === msg ? '' : m)), 2600); };
+  const toggleSelect = (id) => setSelected((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+  const exitSelect = () => { setSelecting(false); setSelected(new Set()); setConfirmDelete(false); };
+
   const dismissHint = () => {
     setHintDone(true);
     try { localStorage.setItem(DRAG_HINT_KEY, '1'); } catch { /* אחסון חסום */ }
@@ -130,6 +147,47 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
     if (!source || groupId === AUTO_JYNX_GROUP) return;
     onMoveToGroup(source, groupId);
     setArrange('groups');
+  };
+
+  /* ---- מה שאפשר לעשות על הנבחרים ---- */
+
+  const selectedComments = () => shown.filter((c) => selected.has(c.id));
+
+  const exportSelected = (kind) => {
+    const list = selecting && selected.size ? selectedComments() : shown;
+    if (kind === 'csv') { downloadCsv(list, groups); say(`${list.length} rows downloaded`); return; }
+    copyMarkdown(list, groups).then((ok) => say(ok ? `${list.length} rows copied` : 'Could not reach the clipboard'));
+  };
+
+  const groupSelected = async () => {
+    const ids = [...selected];
+    if (ids.length < 2) return;
+    const group = await onGroup(NEW_GROUP_NAME, ids);
+    setArrange('groups');
+    dismissHint();
+    exitSelect();
+    if (group) {
+      setCollapsed((c) => ({ ...c, [group.id]: false }));
+      setRenamingGroup(group.id);
+      setGroupName(group.name);
+    }
+  };
+
+  // מחיקה מרובה נשאלת פעם אחת לפני שהיא קורית: הכפתור הופך ל"Delete N?"
+  // והלחיצה השנייה היא זו שמוחקת.
+  const deleteSelected = () => {
+    if (!confirmDelete) { setConfirmDelete(true); return; }
+    const ids = [...selected];
+    onBulkDelete(ids);
+    say(`${ids.length} deleted`);
+    exitSelect();
+  };
+
+  const resolveSelected = () => {
+    const ids = [...selected];
+    onBulkResolve(ids, true);
+    say(`${ids.length} marked done`);
+    exitSelect();
   };
 
   const commitRename = (id) => {
@@ -251,6 +309,75 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
           </div>
         </div>
 
+        {/* למנהלים: לקחת את החוט החוצה, או לעבוד על כמה הערות יחד. */}
+        {isAdmin && (
+          <div className="comments-admin-row">
+            <button
+              type="button"
+              className={'comments-admin-btn' + (selecting ? ' active' : '')}
+              onClick={() => (selecting ? exitSelect() : setSelecting(true))}
+              data-devblock="jynx-comments-select-toggle"
+              title="Pick several comments and act on them together"
+            >
+              <ListChecks size={11} /> {selecting ? 'Done selecting' : 'Select'}
+            </button>
+            <span className="comments-admin-spacer" />
+            <button
+              type="button" className="comments-admin-btn"
+              onClick={() => exportSelected('copy')}
+              data-devblock="jynx-comments-export-copy"
+              title={`Copy ${shown.length} comments as a table — paste it straight into a chat with Claude`}
+            >
+              <Copy size={11} /> Copy table
+            </button>
+            <button
+              type="button" className="comments-admin-btn"
+              onClick={() => exportSelected('csv')}
+              data-devblock="jynx-comments-export-csv"
+              title={`Download ${shown.length} comments as a CSV that opens in Excel`}
+            >
+              <Download size={11} /> CSV
+            </button>
+          </div>
+        )}
+
+        {selecting && (
+          <div className="comments-bulk-bar" data-devblock="jynx-comments-bulk-bar">
+            <span className="comments-bulk-count">{selected.size} selected</span>
+            <button type="button" className="comments-admin-btn" onClick={() => setSelected(new Set(shown.map((c) => c.id)))}>
+              All ({shown.length})
+            </button>
+            <button type="button" className="comments-admin-btn" disabled={!selected.size} onClick={() => setSelected(new Set())}>
+              Clear
+            </button>
+            <span className="comments-admin-spacer" />
+            <button type="button" className="comments-admin-btn" disabled={selected.size < 2} onClick={groupSelected} title="Put the selected comments in one group">
+              <FolderPlus size={11} /> Group
+            </button>
+            <button type="button" className="comments-admin-btn" disabled={!selected.size} onClick={resolveSelected} title="Mark the selected comments done">
+              <CheckCircle2 size={11} /> Done
+            </button>
+            <button type="button" className="comments-admin-btn" disabled={!selected.size} onClick={() => exportSelected('copy')} title="Copy the selected comments as a table">
+              <Copy size={11} />
+            </button>
+            <button type="button" className="comments-admin-btn" disabled={!selected.size} onClick={() => exportSelected('csv')} title="Download the selected comments as CSV">
+              <Download size={11} />
+            </button>
+            <button
+              type="button"
+              className={'comments-admin-btn comments-admin-btn-danger' + (confirmDelete ? ' armed' : '')}
+              disabled={!selected.size}
+              onClick={deleteSelected}
+              onBlur={() => setConfirmDelete(false)}
+              title="Delete the selected comments"
+            >
+              <Trash2 size={11} /> {confirmDelete ? `Delete ${selected.size}?` : ''}
+            </button>
+          </div>
+        )}
+
+        {flash2 && <div className="comments-flash-note">{flash2}</div>}
+
         {shown.length === 0 && (
           <div className="comments-sidebar-empty">
             No {statusFilter} comments {scope === 'all' ? 'anywhere' : 'on this screen'}
@@ -369,8 +496,9 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
                   className={'comments-sidebar-item'
                     + (otherPage ? ' comments-sidebar-item-other-page' : '')
                     + (dragId === a.id ? ' comments-sidebar-item-dragging' : '')
-                    + (dropTarget === a.id ? ' comments-sidebar-item-drop' : '')}
-                  draggable
+                    + (dropTarget === a.id ? ' comments-sidebar-item-drop' : '')
+                    + (selected.has(a.id) ? ' comments-sidebar-item-selected' : '')}
+                  draggable={!selecting}
                   onDragStart={(e) => {
                     e.dataTransfer.effectAllowed = 'move';
                     e.dataTransfer.setData('text/plain', a.id);
@@ -388,9 +516,20 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
                   title="Drag onto another comment to group them"
                   onMouseEnter={() => setHoveredId(a.id)}
                   onMouseLeave={() => setHoveredId((h) => (h === a.id ? null : h))}
-                  onClick={() => !isEditing && jumpTo(a)}
+                  onClick={() => {
+                    if (isEditing) return;
+                    // בזמן בחירה קליק בוחר. בלי זה כל סימון היה גם קופץ למסך
+                    // אחר, והבחירה הבאה כבר הייתה על רשימה אחרת.
+                    if (selecting) { toggleSelect(a.id); return; }
+                    jumpTo(a);
+                  }}
                 >
                   <span className="comments-sidebar-item-target">
+                    {selecting && (
+                      <span className={'comments-select-box' + (selected.has(a.id) ? ' checked' : '')}>
+                        {selected.has(a.id) ? <CheckSquare size={12} /> : <Square size={12} />}
+                      </span>
+                    )}
                     {isJynxAuthor(a) && !inAutoGroup && <JynxSuggestionBadge />}
                     {a.targetKind === 'text' && <span className="comments-kind-badge">text</span>}
                     {otherPage && <span className="comments-route-badge" title="On another screen — click to go there">{screenOf(a.route)}</span>}

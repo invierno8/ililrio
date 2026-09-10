@@ -602,6 +602,47 @@ body.jynx-side-open { --jynx-side-offset: var(--jynx-side-width); }
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--jynx) 22%, transparent);
 }
 
+/* ---------- שורת המנהל: ייצוא ובחירה מרובה ---------- */
+
+.comments-admin-row, .comments-bulk-bar {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 5px;
+  padding: 0 10px 7px;
+}
+.comments-bulk-bar {
+  margin: 0 10px 7px; padding: 6px 7px;
+  border: 1px solid color-mix(in srgb, var(--jynx) 40%, transparent); border-radius: 9px;
+  background: color-mix(in srgb, var(--jynx) 8%, transparent);
+}
+.comments-admin-spacer { flex: 1 1 auto; }
+.comments-admin-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--panel-raised); border: 1px solid var(--line); border-radius: 7px;
+  padding: 3px 7px; cursor: pointer;
+  color: var(--text-dim); font-family: var(--font-jynx); font-size: 10px; font-weight: 700;
+}
+.comments-admin-btn:hover:not(:disabled) { color: var(--jynx); border-color: var(--jynx); }
+.comments-admin-btn:disabled { opacity: .4; cursor: default; }
+.comments-admin-btn.active { color: var(--jynx); border-color: var(--jynx); background: color-mix(in srgb, var(--jynx) 14%, transparent); }
+.comments-admin-btn-danger:hover:not(:disabled), .comments-admin-btn-danger.armed {
+  color: var(--red); border-color: var(--red); background: color-mix(in srgb, var(--red) 12%, transparent);
+}
+.comments-bulk-count {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--jynx);
+}
+/* הודעה קצרה אחרי פעולה — כמה שורות הועתקו, כמה נמחקו */
+.comments-flash-note {
+  margin: 0 10px 7px; padding: 4px 8px; border-radius: 7px;
+  background: color-mix(in srgb, var(--jynx) 12%, transparent);
+  color: var(--jynx); font-size: 10px; font-weight: 700;
+}
+
+.comments-select-box { display: inline-flex; align-items: center; color: var(--text-dim); }
+.comments-select-box.checked { color: var(--jynx); }
+.comments-sidebar-item-selected {
+  border-color: var(--jynx);
+  background: color-mix(in srgb, var(--jynx) 9%, var(--panel-raised));
+}
+
 /* ---------- הרמז על הגרירה ---------- */
 
 .jynx-drag-hint {

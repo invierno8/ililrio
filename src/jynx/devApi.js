@@ -85,6 +85,11 @@ export async function editAnnotation(id, comment) {
   return (await call(`/api/jynx/comments/${id}`, { method: 'PATCH', body: JSON.stringify({ comment }) })).comment;
 }
 
+/** מחיקה או סימון כטופל של כמה הערות בקריאה אחת. */
+export async function bulkComments(op, ids, extra = {}) {
+  return (await call('/api/jynx/comments/bulk', { method: 'POST', body: JSON.stringify({ op, ids, ...extra }) })).ids;
+}
+
 export async function setCommentGroup(id, groupId) {
   return (await call(`/api/jynx/comments/${id}`, { method: 'PATCH', body: JSON.stringify({ groupId }) })).comment;
 }
