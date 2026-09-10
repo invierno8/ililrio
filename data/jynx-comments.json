@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T10:13:24.790Z",
+  "updatedAt": "2026-09-10T10:14:16.434Z",
   "comments": [
     {
       "id": "c-1ed57e07",
@@ -12,6 +12,32 @@
       "targetPath": "0/1/1/0/1/1/0",
       "secondaryTargets": [],
       "comment": "fasfas",
+      "resolved": false,
+      "replies": []
+    },
+    {
+      "id": "c-5b37034e",
+      "createdAt": "2026-09-10T10:02:54.295Z",
+      "authorId": "u-fb97eb31da",
+      "authorName": "ilil",
+      "route": "P1:catalog",
+      "targetLabel": "תמונה",
+      "targetPath": "0/1/1/0/1/0/0",
+      "secondaryTargets": [],
+      "comment": "DUPLICATE-CHECK-1789034573944",
+      "resolved": false,
+      "replies": []
+    },
+    {
+      "id": "c-8dd28f6b",
+      "createdAt": "2026-09-10T10:14:16.434Z",
+      "authorId": "u-fb97eb31da",
+      "authorName": "ilil",
+      "route": "P1:catalog",
+      "targetLabel": "תמונה",
+      "targetPath": "0/1/1/0/1/0/0",
+      "secondaryTargets": [],
+      "comment": "LIVE-ONCE-1789035254882",
       "resolved": false,
       "replies": []
     }
