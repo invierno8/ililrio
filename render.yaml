@@ -20,7 +20,7 @@ services:
         sync: false
       - key: JYNX_SESSION_SECRET
         generateValue: true
-      - key: JYNX_PASSWORD_TOM
+      - key: JYNX_PASSWORD_RIO
         sync: false
       - key: JYNX_PASSWORD_ILIL
         sync: false

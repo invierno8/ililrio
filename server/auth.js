@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 /**
  * מי יכול להעיר.
  *
- *  מנהל — Tom ו-ilil, כל אחד עם הסיסמה שלו. רואים הכול, מוחקים הכול,
+ *  מנהל — rio ו-ilil, כל אחד עם הסיסמה שלו. רואים הכול, מוחקים הכול,
  *         ומנהלים את רשימת המעירים.
  *  מעיר — רק מי שמנהל הוסיף לרשימה (data/jynx-users.json). מעיר, מגיב,
  *         ועורך או מוחק רק את מה שהוא עצמו כתב.
@@ -18,18 +18,21 @@ import crypto from 'node:crypto';
  */
 
 /**
- * הסיסמאות הזמניות של המנהלים, לפי בקשה, כדי שהכניסה תעבוד מיד אחרי
- * הפריסה. להחלפה בלי לגעת בקוד: JYNX_PASSWORD_TOM / JYNX_PASSWORD_ILIL
- * בלוח הבקרה של השירות.
+ * שני המנהלים והסיסמאות הזמניות שלהם, כדי שהכניסה תעבוד מיד אחרי הפריסה.
+ * להחלפה: JYNX_PASSWORD_RIO / JYNX_PASSWORD_ILIL בלוח הבקרה של השירות, או
+ * מתוך Jynx עצמה.
+ *
+ * JYNX_PASSWORD_TOM נקרא כגיבוי כי זה השם שהיה כאן קודם והוא כבר מוגדר
+ * בשירות — כך ששינוי השם אינו מנתק אף אחד באמצע.
  */
 const ADMINS = {
-  tom: process.env.JYNX_PASSWORD_TOM || '2222',
+  rio: process.env.JYNX_PASSWORD_RIO || process.env.JYNX_PASSWORD_TOM || '2222',
   ilil: process.env.JYNX_PASSWORD_ILIL || '1111',
 };
 
 export const ADMIN_NAMES = Object.keys(ADMINS);
 export const ADMIN_SEED_PASSWORD = (name) => ADMINS[String(name).toLowerCase()];
-export const ADMIN_PASSWORDS_ARE_DEFAULT = !process.env.JYNX_PASSWORD_TOM && !process.env.JYNX_PASSWORD_ILIL;
+export const ADMIN_PASSWORDS_ARE_DEFAULT = !process.env.JYNX_PASSWORD_RIO && !process.env.JYNX_PASSWORD_TOM && !process.env.JYNX_PASSWORD_ILIL;
 
 const SECRET = process.env.JYNX_SESSION_SECRET || '';
 const SESSION_DAYS = 30;
