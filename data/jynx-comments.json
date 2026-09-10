@@ -1,6 +1,14 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T11:46:55.368Z",
+  "updatedAt": "2026-09-10T12:17:22.936Z",
+  "groups": [
+    {
+      "id": "g-ba7ac977",
+      "name": "טופס פריט ייבוא אצווה הו…",
+      "createdAt": "2026-09-10T12:17:22.936Z",
+      "createdBy": "ilil"
+    }
+  ],
   "comments": [
     {
       "id": "c-e8337698",
@@ -88,7 +96,8 @@
       "drawing": null,
       "comment": "זה מרגיש סקרול נורא ארוך, מלא נדלן לא מנוצל בצד המשאלי של התצוגה, אולי לפצל את זה ולהציג בשני מלבנים על המסך?",
       "resolved": false,
-      "replies": []
+      "replies": [],
+      "groupId": "g-ba7ac977"
     },
     {
       "id": "c-d02db25c",
@@ -103,7 +112,8 @@
       "drawing": null,
       "comment": "אצווה?",
       "resolved": false,
-      "replies": []
+      "replies": [],
+      "groupId": "g-ba7ac977"
     },
     {
       "id": "c-f8a41034",
