@@ -602,6 +602,54 @@ body.jynx-side-open { --jynx-side-offset: var(--jynx-side-width); }
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--jynx) 22%, transparent);
 }
 
+/* ---------- הרמז על הגרירה ---------- */
+
+.jynx-drag-hint {
+  display: flex; align-items: center; gap: 9px;
+  margin-bottom: 2px; padding: 7px 9px;
+  border: 1px dashed color-mix(in srgb, var(--jynx) 45%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--jynx) 7%, transparent);
+}
+.jynx-drag-hint-text {
+  flex: 1; min-width: 0;
+  color: var(--text-dim); font-size: 10.5px; line-height: 1.35;
+}
+.jynx-drag-hint-close {
+  flex: none; display: flex; align-items: center; justify-content: center;
+  background: none; border: none; padding: 2px; border-radius: 5px;
+  color: var(--text-dim); cursor: pointer;
+}
+.jynx-drag-hint-close:hover { color: var(--jynx); background: var(--panel-hi); }
+
+/* ההדגמה עצמה: שתי שורות, העליונה יורדת על התחתונה ומסגרת נסגרת סביבן. */
+.jynx-drag-hint-anim { position: relative; flex: none; width: 30px; height: 24px; pointer-events: none; }
+.jynx-drag-hint-card { position: absolute; left: 2px; width: 24px; height: 7px; border-radius: 3px; }
+.jynx-drag-hint-card-a { top: 4px; background: color-mix(in srgb, var(--text) 30%, transparent); }
+.jynx-drag-hint-card-b {
+  top: 14px; background: var(--jynx);
+  animation: jynxDragHintCard 4.2s ease-in-out infinite;
+}
+.jynx-drag-hint-ring {
+  position: absolute; inset: 1px 0; border: 1px solid var(--jynx); border-radius: 6px;
+  opacity: 0; animation: jynxDragHintRing 4.2s ease-in-out infinite;
+}
+@keyframes jynxDragHintCard {
+  0%, 14% { transform: translate(0, 0); }
+  42%, 74% { transform: translate(3px, -7px); }
+  90%, 100% { transform: translate(0, 0); }
+}
+@keyframes jynxDragHintRing {
+  0%, 44% { opacity: 0; transform: scale(.94); }
+  56%, 74% { opacity: .9; transform: scale(1); }
+  88%, 100% { opacity: 0; transform: scale(.94); }
+}
+/* מי שביקש פחות תנועה מקבל את אותה תמונה, עומדת. */
+@media (prefers-reduced-motion: reduce) {
+  .jynx-drag-hint-card-b { animation: none; transform: translate(3px, -7px); }
+  .jynx-drag-hint-ring { animation: none; opacity: .9; }
+}
+
 /* בורר הסידור — "Group by" בראש הפאנל */
 .comments-arrange-row { align-items: center; gap: 8px; }
 .comments-arrange-label {

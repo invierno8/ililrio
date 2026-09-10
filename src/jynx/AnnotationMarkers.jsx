@@ -183,9 +183,11 @@ function MarkerDot({ list, rect, open, currentUserId, isAdmin, onToggle, onResol
                 ))}
                 <span className="admin-marker-detail-meta">{new Date(a.createdAt).toLocaleString('en-US')}</span>
                 <div className="comments-edit-actions" style={{ justifyContent: 'flex-start' }}>
-                  <button type="button" onClick={() => onResolve(a, !a.resolved)}>
-                    {a.resolved ? 'Reopen' : 'Mark done'}
-                  </button>
+                  {isAdmin && (
+                    <button type="button" onClick={() => onResolve(a, !a.resolved)}>
+                      {a.resolved ? 'Reopen' : 'Mark done'}
+                    </button>
+                  )}
                   {(isAdmin || a.authorId === currentUserId) && (
                     <button type="button" onClick={() => onDelete(a)}>Delete</button>
                   )}

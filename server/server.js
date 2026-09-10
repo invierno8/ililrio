@@ -157,8 +157,12 @@ app.patch('/api/jynx/comments/:id', requireUser, async (req, res) => {
   if (!found) return res.status(404).json({ error: 'Not found' });
 
   const { resolved, comment, groupId } = req.body || {};
-  // סימון כטופל פתוח לכל מי שנכנס; שינוי הטקסט רק לכותב או למנהל.
-  if (typeof resolved === 'boolean') found.resolved = resolved;
+  // סימון כטופל שמור למנהלים: "טופל" הוא החלטה על החוט המשותף, ולא דעה של
+  // מי שכתב. שינוי הטקסט, לעומת זאת, נשאר של הכותב.
+  if (typeof resolved === 'boolean') {
+    if (!req.user.isAdmin) return res.status(403).json({ error: 'Only admins can mark a comment done' });
+    found.resolved = resolved;
+  }
   // שיוך לקבוצה פתוח לכולם: הקיבוץ הוא סידור של החוט המשותף, לא בעלות על
   // ההערה. groupId ריק מוציא אותה מהקבוצה.
   if (groupId !== undefined) {

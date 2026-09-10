@@ -6,6 +6,7 @@ import { sameScreen, screenOf, personaOf } from './route.js';
 import JynxSuggestionBadge, { isJynxAuthor } from './JynxSuggestionBadge.jsx';
 import { sectionsFor, ARRANGEMENTS, NEW_GROUP_NAME, AUTO_JYNX_GROUP } from './grouping.js';
 import DrawingOverlay from './DrawingOverlay.jsx';
+import DragHint from './DragHint.jsx';
 
 /* ==================================================================
    פאנל ההערות. התוכן והפילטרים הם של commando (overlay/CommentsPanel.jsx)
@@ -21,6 +22,7 @@ import DrawingOverlay from './DrawingOverlay.jsx';
 // פתח את הפאנל פעם אחת היה נשאר עם הבחירה הישנה שנשמרה לו מאליה.
 const ARRANGE_KEY = 'jynx-comments-arrange:2';
 const DEFAULT_ARRANGE = 'user';
+const DRAG_HINT_KEY = 'jynx-drag-hint-done';
 
 export default function CommentsPanel({ comments, groups = [], route, currentUser, hotkeySymbol = 'Ctrl', onNavigate, onClose, onResolve, onDelete, onEdit, onReply, onGroup, onUngroup, onRenameGroup, onMoveToGroup }) {
   const [statusFilter, setStatusFilter] = useState('open');
@@ -44,6 +46,15 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
     try { return localStorage.getItem(ARRANGE_KEY) || DEFAULT_ARRANGE; } catch { return DEFAULT_ARRANGE; }
   });
   const [collapsed, setCollapsed] = useState({});
+  // הרמז על הגרירה מוצג פעם אחת בחיי הדפדפן: עד שסוגרים אותו או עד
+  // שנוצרת קבוצה ראשונה, ואז אין מה ללמד.
+  const [hintDone, setHintDone] = useState(() => {
+    try { return localStorage.getItem(DRAG_HINT_KEY) === '1'; } catch { return false; }
+  });
+  const dismissHint = () => {
+    setHintDone(true);
+    try { localStorage.setItem(DRAG_HINT_KEY, '1'); } catch { /* אחסון חסום */ }
+  };
   const [dragId, setDragId] = useState(null);
   // גם ref וגם state: ה-state צובע את השורה, אבל dragover חייב להחליט אם
   // לאפשר שחרור באותו רגע — ועדכון state עדיין לא הוחל אז. בלי ה-ref
@@ -103,6 +114,7 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
     }
     const group = await onGroup(NEW_GROUP_NAME, [target.id, source.id]);
     setArrange('groups');
+    dismissHint();
     if (group) {
       setCollapsed((c) => ({ ...c, [group.id]: false }));
       setRenamingGroup(group.id);
@@ -261,6 +273,11 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
         )}
 
         <div className="comments-sidebar-list">
+          {/* אין טעם ללמד גרירה כשאין לאן לגרור, או כשכבר יש קבוצות. */}
+          {!hintDone && arrange !== 'none' && shown.length >= 2
+            && !sections.some((sec) => sec.kind === 'manual')
+            && <DragHint onDismiss={dismissHint} />}
+
           {sections.map((section) => (
             <div
               key={section.id}
@@ -459,9 +476,13 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
                       <button type="button" className="comments-reply-btn" onClick={(e) => { e.stopPropagation(); setReplyingId(a.id); setReplyText(''); }}>
                         <CornerDownRight size={11} /> Reply
                       </button>
-                      <button type="button" className="comments-reply-btn" onClick={(e) => { e.stopPropagation(); onResolve(a, !a.resolved); }}>
-                        {a.resolved ? 'Reopen' : 'Mark done'}
-                      </button>
+                      {/* "טופל" הוא החלטה של מנהל — מי שאינו מנהל רואה את
+                          הסטטוס אבל אינו קובע אותו. */}
+                      {currentUser?.isAdmin && (
+                        <button type="button" className="comments-reply-btn" onClick={(e) => { e.stopPropagation(); onResolve(a, !a.resolved); }}>
+                          {a.resolved ? 'Reopen' : 'Mark done'}
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
