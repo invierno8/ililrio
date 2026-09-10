@@ -567,19 +567,21 @@ body.jynx-side-open { --jynx-side-offset: var(--jynx-side-width); }
 }
 /* יעד גרירה — הקבוצה כולה מוארת, כדי שיהיה ברור לאן ההערה תיפול. */
 .comments-group-drop { border-color: var(--jynx); background: color-mix(in srgb, var(--jynx) 10%, transparent); }
-.comments-group-head { display: flex; align-items: center; gap: 5px; padding: 2px 2px 0; }
-.comments-group-toggle, .comments-group-action {
+.comments-group-head { display: flex; align-items: center; gap: 4px; padding: 2px 2px 0; }
+.comments-group-action {
   display: flex; align-items: center; justify-content: center;
   background: none; border: none; color: var(--text-dim); cursor: pointer; padding: 2px; border-radius: 5px;
 }
-.comments-group-toggle:hover, .comments-group-action:hover { color: var(--jynx); background: var(--panel-hi); }
+.comments-group-action:hover { color: var(--jynx); background: var(--panel-hi); }
+/* הכותרת כולה היא כפתור פתיחה־וסגירה, ולכן היא רחבה ככל האפשר. */
 .comments-group-name {
   display: inline-flex; align-items: center; gap: 5px; flex: 1; min-width: 0;
-  background: none; border: none; padding: 0; cursor: pointer; text-align: start;
+  background: none; border: none; padding: 2px 4px; cursor: pointer; text-align: start;
+  border-radius: 6px;
   color: var(--text); font-family: var(--font-jynx); font-size: 11.5px; font-weight: 700;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.comments-group-name:hover { color: var(--jynx); }
+.comments-group-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.comments-group-name:hover { color: var(--jynx); background: var(--panel-hi); }
 .comments-group-name-auto { color: var(--jynx); }
 .comments-group-count {
   flex: none; min-width: 17px; height: 15px; padding: 0 5px; border-radius: 9999px;
@@ -600,16 +602,26 @@ body.jynx-side-open { --jynx-side-offset: var(--jynx-side-width); }
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--jynx) 22%, transparent);
 }
 
+/* בורר הסידור — "Group by" בראש הפאנל */
+.comments-arrange-row { align-items: center; gap: 8px; }
+.comments-arrange-label {
+  font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--text-dim);
+}
+.comments-arrange-row .pill-tab { display: inline-flex; align-items: center; gap: 4px; }
+
 /* שורת המיקוד — כשמסננים לקבוצה או לכותב */
-.comments-focus-row { padding: 0 10px 7px; }
+.comments-focus-row { padding: 0 10px 7px; display: flex; align-items: center; gap: 8px; }
+.comments-focus-clear {
+  flex: none; background: none; border: none; cursor: pointer; padding: 0;
+  color: var(--text-dim); font-size: 10.5px; font-weight: 700; text-decoration: underline;
+}
+.comments-focus-clear:hover { color: var(--jynx); }
 .comments-focus-chip {
   display: inline-flex; align-items: center; gap: 6px;
-  border: 1px solid var(--jynx); border-radius: 9999px; padding: 3px 6px 3px 10px;
+  border: 1px solid var(--jynx); border-radius: 9999px; padding: 3px 10px;
   background: color-mix(in srgb, var(--jynx) 14%, transparent);
-  color: var(--jynx); font-size: 10.5px; font-weight: 700; max-width: 100%;
+  color: var(--jynx); font-size: 10.5px; font-weight: 700; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.comments-focus-chip button {
-  display: flex; align-items: center; justify-content: center;
-  background: none; border: none; color: inherit; cursor: pointer; padding: 0;
-}
-.comments-focus-chip button:hover { color: var(--red); }
+

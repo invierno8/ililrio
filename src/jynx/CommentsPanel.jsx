@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { MessageSquare, X, Search, CheckCircle2, Pencil, Trash2, CornerDownRight, ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
+import { MessageSquare, X, Search, CheckCircle2, Pencil, Trash2, CornerDownRight, ChevronDown, ChevronRight, Sparkles, Filter, Users } from 'lucide-react';
 import { elementForComment } from './useHoverTarget.js';
 import { sameScreen, screenOf, personaOf } from './route.js';
 import JynxSuggestionBadge, { isJynxAuthor } from './JynxSuggestionBadge.jsx';
-import { sectionsFor, defaultGroupName, AUTO_JYNX_GROUP } from './grouping.js';
+import { sectionsFor, ARRANGEMENTS, NEW_GROUP_NAME, AUTO_JYNX_GROUP } from './grouping.js';
 import DrawingOverlay from './DrawingOverlay.jsx';
 
 /* ==================================================================
@@ -16,6 +16,8 @@ import DrawingOverlay from './DrawingOverlay.jsx';
    וגריר. המגירה גם דוחפת את הדמו הצידה (ראו body.jynx-side-open ב-
    theme.css) במקום לכסות אותו, כך ששום דבר באתר לא מוסתר בזמן שהיא פתוחה.
    ================================================================== */
+
+const ARRANGE_KEY = 'jynx-comments-arrange';
 
 export default function CommentsPanel({ comments, groups = [], route, currentUser, hotkeySymbol = 'Ctrl', onNavigate, onClose, onResolve, onDelete, onEdit, onReply, onGroup, onUngroup, onRenameGroup, onMoveToGroup }) {
   const [statusFilter, setStatusFilter] = useState('open');
@@ -30,8 +32,13 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
   const [editText, setEditText] = useState('');
   const [replyingId, setReplyingId] = useState(null);
   const [replyText, setReplyText] = useState('');
-  // סינון לקבוצה או לכותב, מהקלקה על כותרת קבוצה או על שם. null = הכול.
+  // סינון לקבוצה או לכותב — תמיד מבקשה מפורשת (אייקון המשפך או שם הכותב),
+  // אף פעם לא מלחיצה על כותרת קבוצה: קליק על כותרת פותח וסוגר, וזה הכול.
   const [focus, setFocus] = useState(null); // { kind: 'group'|'author', id, label }
+  // איך מסודרת הרשימה: none / groups / user. נשמר, כי זו העדפת קריאה.
+  const [arrange, setArrange] = useState(() => {
+    try { return localStorage.getItem(ARRANGE_KEY) || 'groups'; } catch { return 'groups'; }
+  });
   const [collapsed, setCollapsed] = useState({});
   const [dragId, setDragId] = useState(null);
   // גם ref וגם state: ה-state צובע את השורה, אבל dragover חייב להחליט אם
@@ -41,6 +48,10 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
   const [dropTarget, setDropTarget] = useState(null);
   const [renamingGroup, setRenamingGroup] = useState(null);
   const [groupName, setGroupName] = useState('');
+
+  useEffect(() => {
+    try { localStorage.setItem(ARRANGE_KEY, arrange); } catch { /* אחסון חסום */ }
+  }, [arrange]);
 
   // כל עוד המגירה פתוחה, הדמו מצטמצם ברוחב שלה במקום להיות מכוסה.
   useEffect(() => {
@@ -66,10 +77,15 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }, [comments, statusFilter, scope, mineOnly, keywordNeedle, route, currentUser, focus]);
 
-  const { sections, loose } = useMemo(() => sectionsFor(shown, groups), [shown, groups]);
+  const { sections, loose } = useMemo(() => sectionsFor(shown, groups, arrange), [shown, groups, arrange]);
 
-  /** גרירת הערה על אחרת יוצרת קבוצה; על כותרת קבוצה מצרפת אליה. */
-  const handleDropOnComment = (target, sourceId) => {
+  /**
+   * גרירת הערה על אחרת יוצרת קבוצה; על כותרת קבוצה מצרפת אליה. קבוצה חדשה
+   * נולדת עם שם זמני ועם התיבה פתוחה והטקסט מסומן — כי כל הנקודה היא לתת לה
+   * שם, ולא לחפש אחר כך איפה משנים אותו. אם הרשימה הייתה מסודרת אחרת,
+   * המתג עובר ל"קבוצות", אחרת הקבוצה שזה עתה נוצרה לא הייתה נראית בכלל.
+   */
+  const handleDropOnComment = async (target, sourceId) => {
     const source = comments.find((c) => c.id === (sourceId || dragIdRef.current));
     dragIdRef.current = null;
     setDragId(null);
@@ -78,9 +94,16 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
     const targetGroup = target.groupId;
     if (targetGroup) {
       onMoveToGroup(source, targetGroup);
+      setArrange('groups');
       return;
     }
-    onGroup(defaultGroupName([target, source]), [target.id, source.id]);
+    const group = await onGroup(NEW_GROUP_NAME, [target.id, source.id]);
+    setArrange('groups');
+    if (group) {
+      setCollapsed((c) => ({ ...c, [group.id]: false }));
+      setRenamingGroup(group.id);
+      setGroupName(group.name);
+    }
   };
 
   const handleDropOnGroup = (groupId, sourceId) => {
@@ -90,6 +113,13 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
     setDropTarget(null);
     if (!source || groupId === AUTO_JYNX_GROUP) return;
     onMoveToGroup(source, groupId);
+    setArrange('groups');
+  };
+
+  const commitRename = (id) => {
+    const name = groupName.trim();
+    if (name) onRenameGroup(id, name);
+    setRenamingGroup(null);
   };
 
   const rectFor = (a) => {
@@ -173,6 +203,28 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
           </div>
         </div>
 
+        {/* איך לסדר את הרשימה. מתג גלוי, כי הסידור שייך למי שקורא: "קבוצות"
+            הוא מה שהמשתמש בנה בעצמו, "משתמש" מסדר לפי מי שכתב, ו"ללא" מחזיר
+            לרשימה אחת. כיבוי אינו מוחק דבר — הקבוצות ממתינות במקומן. */}
+        <div className="comments-sidebar-filters comments-arrange-row">
+          <span className="comments-arrange-label">Group by</span>
+          <div className="pill-tabs">
+            {ARRANGEMENTS.map((a) => (
+              <button
+                key={a.id} type="button"
+                className={'pill-tab' + (arrange === a.id ? ' active' : '')}
+                onClick={() => setArrange(a.id)}
+                title={a.id === 'groups' ? 'Your own groups — drag one comment onto another to make one'
+                  : a.id === 'user' ? 'A section per person who commented'
+                  : 'One flat list, newest first'}
+              >
+                {a.id === 'user' && <Users size={10} />}
+                {a.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="comments-sidebar-search-row">
           <div className="comments-sidebar-search-box">
             <Search size={12} />
@@ -195,9 +247,12 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
         {focus && (
           <div className="comments-focus-row">
             <span className="comments-focus-chip">
-              {focus.kind === 'author' ? 'By ' : ''}{focus.label}
-              <button type="button" onClick={() => setFocus(null)} title="Show everything again"><X size={11} /></button>
+              <Filter size={10} />
+              Only {focus.kind === 'author' ? `${focus.label}'s comments` : focus.label}
             </span>
+            <button type="button" className="comments-focus-clear" onClick={() => setFocus(null)}>
+              Show all
+            </button>
           </div>
         )}
 
@@ -207,7 +262,7 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
               key={section.id}
               className={'comments-group' + (dropTarget === section.id ? ' comments-group-drop' : '')}
               onDragOver={(e) => {
-                if (section.auto || !dragIdRef.current) return;
+                if (section.kind !== 'manual' || !dragIdRef.current) return;
                 e.preventDefault();
                 setDropTarget(section.id);
               }}
@@ -215,45 +270,52 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
               onDrop={(e) => { e.preventDefault(); handleDropOnGroup(section.id, e.dataTransfer.getData('text/plain')); }}
             >
               <div className="comments-group-head">
-                <button
-                  type="button" className="comments-group-toggle"
-                  onClick={() => setCollapsed((c) => ({ ...c, [section.id]: !c[section.id] }))}
-                  title={collapsed[section.id] ? 'Expand' : 'Collapse'}
-                >
-                  {collapsed[section.id] ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
-                </button>
-
                 {renamingGroup === section.id ? (
                   <input
                     className="comments-group-rename" autoFocus value={groupName}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) => setGroupName(e.target.value)}
-                    onBlur={() => { if (groupName.trim()) onRenameGroup(section.id, groupName.trim()); setRenamingGroup(null); }}
+                    onBlur={() => { commitRename(section.id); }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') { if (groupName.trim()) onRenameGroup(section.id, groupName.trim()); setRenamingGroup(null); }
+                      if (e.key === 'Enter') commitRename(section.id);
                       if (e.key === 'Escape') setRenamingGroup(null);
                     }}
                   />
                 ) : (
+                  // הכותרת כולה פותחת וסוגרת. קודם היא סיננה, וקליק תמים
+                  // העלים את כל שאר ההערות בלי שיהיה ברור מה קרה.
                   <button
                     type="button"
-                    className={'comments-group-name' + (section.auto ? ' comments-group-name-auto' : '')}
-                    onClick={() => setFocus({ kind: 'group', id: section.id, label: section.name })}
-                    title="Show only this group"
+                    className={'comments-group-name' + (section.kind === 'auto' ? ' comments-group-name-auto' : '')}
+                    onClick={() => setCollapsed((c) => ({ ...c, [section.id]: !c[section.id] }))}
+                    title={collapsed[section.id] ? 'Open this group' : 'Close this group'}
                   >
-                    {section.auto && <Sparkles size={10} />}
-                    {section.name}
+                    {collapsed[section.id] ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
+                    {section.kind === 'auto' && <Sparkles size={10} />}
+                    {section.kind === 'user' && <Users size={10} />}
+                    <span className="comments-group-name-text">{section.name}</span>
                   </button>
                 )}
 
                 <span className="comments-group-count">{section.items.length}</span>
 
-                {!section.auto && (
+                <button
+                  type="button" className="comments-group-action"
+                  title={`Show only ${section.name}`}
+                  onClick={() => setFocus(section.kind === 'user'
+                    ? { kind: 'author', id: section.author, label: section.author }
+                    : { kind: 'group', id: section.id, label: section.name })}
+                >
+                  <Filter size={10} />
+                </button>
+
+                {section.kind === 'manual' && (
                   <>
-                    <button type="button" className="comments-group-action" title="Rename group"
+                    <button type="button" className="comments-group-action" title="Rename this group"
                       onClick={() => { setRenamingGroup(section.id); setGroupName(section.name); }}>
                       <Pencil size={10} />
                     </button>
-                    <button type="button" className="comments-group-action" title="Ungroup — the comments stay"
+                    <button type="button" className="comments-group-action" title="Take the group apart — the comments stay"
                       onClick={() => onUngroup(section.id)}>
                       <X size={10} />
                     </button>
@@ -261,7 +323,7 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
                 )}
               </div>
 
-              {!collapsed[section.id] && section.items.map((a) => renderComment(a))}
+              {!collapsed[section.id] && section.items.map((a) => renderComment(a, { inAutoGroup: section.kind === 'auto' }))}
             </div>
           ))}
 
@@ -273,7 +335,7 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
   );
 
   /** שורת הערה אחת — משמשת גם בתוך קבוצה וגם מחוצה לה. */
-  function renderComment(a) {
+  function renderComment(a, { inAutoGroup = false } = {}) {
     const replies = a.replies || [];
     const mine = currentUser && a.authorId === currentUser.id;
     const canEdit = mine;
@@ -308,7 +370,7 @@ export default function CommentsPanel({ comments, groups = [], route, currentUse
                   onClick={() => !isEditing && jumpTo(a)}
                 >
                   <span className="comments-sidebar-item-target">
-                    {isJynxAuthor(a) && <JynxSuggestionBadge />}
+                    {isJynxAuthor(a) && !inAutoGroup && <JynxSuggestionBadge />}
                     {a.targetKind === 'text' && <span className="comments-kind-badge">text</span>}
                     {otherPage && <span className="comments-route-badge" title="On another screen — click to go there">{screenOf(a.route)}</span>}
                     {personaOf(a) && <span className="comments-route-badge" title="Written while viewing as this persona">{personaOf(a)}</span>}

@@ -273,9 +273,11 @@ export default function JynxGate() {
     markLocalWrite();
     const group = await createGroup(name, commentIds).catch(() => null);
     markLocalWrite();
-    if (!group) { refresh(); return; }
+    if (!group) { refresh(); return null; }
     mergeGroup(group);
     setComments((prev) => prev.map((c) => (commentIds.includes(c.id) ? { ...c, groupId: group.id } : c)));
+    // מוחזר לפאנל, שפותח מיד את תיבת השם על הקבוצה החדשה.
+    return group;
   }
   async function handleMoveToGroup(comment, groupId) {
     markLocalWrite();
