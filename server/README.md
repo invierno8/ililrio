@@ -36,6 +36,7 @@ npm run dev
 | `JYNX_SESSION_SECRET` | כן | מחרוזת אקראית לחתימת הסשנים |
 | `JYNX_PASSWORD_RIO` | לא | הסיסמה של rio. כברירת מחדל `2222`. אם הוגדר `JYNX_PASSWORD_TOM` בעבר, הוא עדיין נקרא כגיבוי |
 | `JYNX_PASSWORD_ILIL` | לא | הסיסמה של ilil. כברירת מחדל `1111` |
+| `JYNX_VIEWER_PASSWORD` | לא | סיסמת חשבון ההתנסות — קורא בלבד, וכל מה שהוא כותב נשאר בדפדפן שלו. כברירת מחדל `0000` |
 | `JYNX_REVIEWER_PASSWORD` | לא | סיסמה למעירים; אם ריק, כל אחד יכול להיכנס עם שם בלבד |
 | `ALLOWED_ORIGINS` | לא | ברירת מחדל: אתר ה-Pages של הרפו |
 
