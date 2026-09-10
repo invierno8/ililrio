@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T11:43:41.044Z",
+  "updatedAt": "2026-09-10T11:43:44.159Z",
   "comments": [
     {
       "id": "c-e8337698",
@@ -102,23 +102,6 @@
       "secondaryTargets": [],
       "drawing": null,
       "comment": "אצווה?",
-      "resolved": false,
-      "replies": []
-    },
-    {
-      "id": "c-64db2d4a",
-      "createdAt": "2026-09-10T11:35:32.294Z",
-      "authorId": "u-c313213c35",
-      "authorName": "Jynx",
-      "route": "notifications",
-      "routePersona": "P1",
-      "routeItemId": null,
-      "targetLabel": "פריט 'מערכת תקשורת מוצפנת ניידת' עבר לסטטוס זמין",
-      "targetPath": "0/1/1/0/1/1/0/0",
-      "targetKind": "text",
-      "secondaryTargets": [],
-      "drawing": null,
-      "comment": "ההתראה מסומנת \"היום\" אבל התאריך שלה הוא 15.01.2025, בזמן שפריטי הקטלוג עודכנו במרץ 2026. הקיבוץ ל\"היום / השבוע / מוקדם יותר\" נשמר כשדה נפרד ואינו נגזר מהתאריך, ולכן השניים יכולים לסתור זה את זה — וברשימת התראות זה בדיוק מה שגורם לאבד אמון בסדר הכרונולוגי. עדיף לגזור את הקיבוץ מהתאריך עצמו.",
       "resolved": false,
       "replies": []
     },
