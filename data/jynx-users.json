@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T09:56:31.195Z",
+  "updatedAt": "2026-09-10T09:57:05.773Z",
   "users": [
     {
       "id": "u-e1608f75c5",
@@ -16,6 +16,16 @@
       "addedBy": "self",
       "firstSeen": "2026-09-09T21:37:04.974Z",
       "lastSeen": "2026-09-09T21:54:49.560Z"
+    },
+    {
+      "id": "u-9f86d08188",
+      "name": "test",
+      "isAdmin": false,
+      "salt": "a2156eae2e907e831141218b5b31eef6",
+      "hash": "f266004d916be71f936e425383e23e39443f340f5301e3ed5c732b347e5a5605",
+      "addedBy": "tom",
+      "firstSeen": null,
+      "lastSeen": null
     }
   ]
 }
