@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import crypto from 'node:crypto';
-import { readJson, writeJson, githubEnabled } from './github.js';
+import { readJson, writeJson, githubEnabled, storageLabel } from './github.js';
 import {
   login, requireUser, requireAdmin, isAdminName, userIdFor, hashPassword, verifyPassword, passwordTaken,
   ADMIN_NAMES, ADMIN_SEED_PASSWORD, ADMIN_PASSWORDS_ARE_DEFAULT,
@@ -34,12 +34,14 @@ app.use(cors({
 }));
 
 let comments = [];
+let groups = [];
 let users = [];
 let ready = false;
 
 async function boot() {
-  const doc = await readJson(COMMENTS_PATH, { version: 1, comments: [] });
+  const doc = await readJson(COMMENTS_PATH, { version: 1, comments: [], groups: [] });
   comments = Array.isArray(doc.comments) ? doc.comments : [];
+  groups = Array.isArray(doc.groups) ? doc.groups : [];
   const roster = await readJson(USERS_PATH, { version: 1, users: [] });
   users = Array.isArray(roster.users) ? roster.users : [];
 
@@ -66,10 +68,10 @@ async function boot() {
 
   ready = true;
   if (ADMIN_PASSWORDS_ARE_DEFAULT) console.warn('[jynx] admin passwords are the temporary defaults');
-  console.log(`[jynx] ready · ${comments.length} comments · ${users.length} users · github ${githubEnabled() ? 'on' : 'OFF (in-memory only)'}`);
+  console.log(`[jynx] ready · ${comments.length} comments · ${users.length} users · storage: ${storageLabel()}`);
 }
 
-const saveComments = (message) => writeJson(COMMENTS_PATH, { version: 1, updatedAt: new Date().toISOString(), comments }, message);
+const saveComments = (message) => writeJson(COMMENTS_PATH, { version: 1, updatedAt: new Date().toISOString(), groups, comments }, message);
 const saveUsers = (message) => writeJson(USERS_PATH, { version: 1, updatedAt: new Date().toISOString(), users }, message);
 
 /** רושם מתי מישהו נכנס לאחרונה, כדי שרשימת המעירים תשקף מי באמת פעיל. */
@@ -111,7 +113,7 @@ app.get('/api/jynx/me', requireUser, (req, res) => res.json({ user: req.user }))
 // ---- הערות -----------------------------------------------------------------
 
 app.get('/api/jynx/comments', requireUser, (req, res) => {
-  res.json({ comments, updatedAt: new Date().toISOString() });
+  res.json({ comments, groups, updatedAt: new Date().toISOString() });
 });
 
 app.post('/api/jynx/comments', requireUser, async (req, res) => {
@@ -136,6 +138,7 @@ app.post('/api/jynx/comments', requireUser, async (req, res) => {
     secondaryTargets: Array.isArray(secondaryTargets) ? secondaryTargets.slice(0, 10) : [],
     drawing: drawing && Array.isArray(drawing.strokes) ? { strokes: drawing.strokes.slice(0, 40), color: String(drawing.color || '').slice(0, 40) } : null,
     comment: String(comment).slice(0, 4000),
+    groupId: null,
     resolved: false,
     replies: [],
   };
@@ -153,9 +156,15 @@ app.patch('/api/jynx/comments/:id', requireUser, async (req, res) => {
   const found = comments.find((c) => c.id === req.params.id);
   if (!found) return res.status(404).json({ error: 'Not found' });
 
-  const { resolved, comment } = req.body || {};
+  const { resolved, comment, groupId } = req.body || {};
   // סימון כטופל פתוח לכל מי שנכנס; שינוי הטקסט רק לכותב או למנהל.
   if (typeof resolved === 'boolean') found.resolved = resolved;
+  // שיוך לקבוצה פתוח לכולם: הקיבוץ הוא סידור של החוט המשותף, לא בעלות על
+  // ההערה. groupId ריק מוציא אותה מהקבוצה.
+  if (groupId !== undefined) {
+    if (groupId && !groups.some((g) => g.id === groupId)) return res.status(404).json({ error: 'No such group' });
+    found.groupId = groupId || null;
+  }
   if (typeof comment === 'string') {
     if (!canManage(req, found)) return res.status(403).json({ error: 'You can only edit your own comment' });
     found.comment = comment.slice(0, 4000);
@@ -201,6 +210,64 @@ app.delete('/api/jynx/comments/:id', requireUser, async (req, res) => {
   comments = comments.filter((c) => c.id !== req.params.id);
   try {
     await saveComments(`jynx: ${req.user.name} deleted a comment`);
+  } catch (err) {
+    console.error('[jynx] save failed:', err.message);
+  }
+  return res.status(204).end();
+});
+
+// ---- קבוצות של הערות --------------------------------------------------------
+
+/**
+ * קבוצה היא סידור של החוט: כמה הערות שמדברות על אותו דבר, תחת שם אחד. כל מי
+ * שנכנס יכול ליצור, לצרף ולפרק — הקיבוץ שייך לדיון ולא לכותב הערה מסוימת.
+ */
+app.post('/api/jynx/groups', requireUser, async (req, res) => {
+  const { name, commentIds } = req.body || {};
+  const clean = String(name || '').trim().slice(0, 120);
+  if (!clean) return res.status(400).json({ error: 'Group needs a name' });
+
+  const group = {
+    id: 'g-' + crypto.randomUUID().slice(0, 8),
+    name: clean,
+    createdAt: new Date().toISOString(),
+    createdBy: req.user.name,
+  };
+  groups.push(group);
+  if (Array.isArray(commentIds)) {
+    comments.forEach((c) => { if (commentIds.includes(c.id)) c.groupId = group.id; });
+  }
+  try {
+    await saveComments(`jynx: ${req.user.name} grouped comments as "${clean}"`);
+  } catch (err) {
+    console.error('[jynx] save failed:', err.message);
+    return res.status(502).json({ error: 'Saved in memory but not to the repo' });
+  }
+  return res.status(201).json({ group, comments });
+});
+
+app.patch('/api/jynx/groups/:id', requireUser, async (req, res) => {
+  const group = groups.find((g) => g.id === req.params.id);
+  if (!group) return res.status(404).json({ error: 'No such group' });
+  const clean = String(req.body?.name || '').trim().slice(0, 120);
+  if (!clean) return res.status(400).json({ error: 'Group needs a name' });
+  group.name = clean;
+  try {
+    await saveComments(`jynx: ${req.user.name} renamed a group to "${clean}"`);
+  } catch (err) {
+    console.error('[jynx] save failed:', err.message);
+  }
+  return res.json({ group });
+});
+
+/** פירוק קבוצה משחרר את ההערות שבה, ולא מוחק אותן. */
+app.delete('/api/jynx/groups/:id', requireUser, async (req, res) => {
+  const group = groups.find((g) => g.id === req.params.id);
+  if (!group) return res.status(404).json({ error: 'No such group' });
+  groups = groups.filter((g) => g.id !== req.params.id);
+  comments.forEach((c) => { if (c.groupId === req.params.id) c.groupId = null; });
+  try {
+    await saveComments(`jynx: ${req.user.name} ungrouped "${group.name}"`);
   } catch (err) {
     console.error('[jynx] save failed:', err.message);
   }

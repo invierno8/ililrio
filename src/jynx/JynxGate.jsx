@@ -2,7 +2,10 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Lock, Eye, EyeOff, MessageSquare, GripVertical, GripHorizontal, X, Loader2, Target, Users, Pencil } from 'lucide-react';
 import { useRio } from '../store/index.js';
 import { useIsNarrow } from '../components/DesktopOnly.jsx';
-import { jynxConfigured, jynxLogin, jynxLogout, fetchMe, fetchComments, submitAnnotation, editAnnotation, resolveAnnotation, replyToAnnotation, deleteAnnotation } from './devApi.js';
+import {
+  jynxConfigured, jynxLogin, jynxLogout, fetchMe, fetchThread, submitAnnotation, editAnnotation,
+  resolveAnnotation, replyToAnnotation, deleteAnnotation, setCommentGroup, createGroup, renameGroup, deleteGroup,
+} from './devApi.js';
 import { useDraggableFab } from './useDraggableFab.js';
 import { useKeepInViewport } from './useKeepInViewport.js';
 import JynxBubbleContent from './JynxBubbleContent.jsx';
@@ -11,7 +14,7 @@ import CommentsPanel from './CommentsPanel.jsx';
 import GreetingMenu from './GreetingMenu.jsx';
 import UsersPanel from './UsersPanel.jsx';
 import HotkeyHint from './HotkeyHint.jsx';
-import { useHotkeyModifier, MODIFIERS } from './hotkey.js';
+import { useHotkeyModifier, hotkeySymbol, isPlainKey, plainKeyOf } from './hotkey.js';
 import { screenOf, personaOf } from './route.js';
 import './theme.css';
 
@@ -62,6 +65,7 @@ export default function JynxGate() {
   const [checking, setChecking] = useState(true);
   const [user, setUser] = useState(null);
   const [comments, setComments] = useState([]);
+  const [groups, setGroups] = useState([]);
 
   const [loginOpen, setLoginOpen] = useState(false);
   const [password, setPassword] = useState('');
@@ -134,7 +138,9 @@ export default function JynxGate() {
 
   const refresh = useCallback(async () => {
     try {
-      setComments(await fetchComments());
+      const thread = await fetchThread();
+      setComments(thread.comments);
+      setGroups(thread.groups);
     } catch (e) {
       if (e.code === 401) setUser(null);
     }
@@ -158,6 +164,8 @@ export default function JynxGate() {
     if (!user) return undefined;
     function onKeyDown(e) {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      // אם המשתמש בחר ספרה כמקש ההערה, היא שייכת לו ולא לסרגל.
+      if (isPlainKey(hotkey) && String(e.key).toLowerCase() === plainKeyOf(hotkey)) return;
       const typing = /^(input|textarea|select)$/i.test(e.target.tagName) || e.target.isContentEditable;
       if (typing) return;
       const idx = Number(e.key) - 1;
@@ -205,6 +213,7 @@ export default function JynxGate() {
     jynxLogout();
     setUser(null);
     setComments([]);
+    setGroups([]);
     setToolbarOpen(false);
     setCommentsOn(false);
     setUsersOpen(false);
@@ -235,6 +244,27 @@ export default function JynxGate() {
     setComments((prev) => prev.map((c) => (c.id === a.id ? { ...c, comment } : c)));
     await editAnnotation(a.id, comment).catch(() => refresh());
   }
+  // קיבוץ: כל פעולה מעדכנת מיד על המסך, ואז מסתנכרנת מהשירות.
+  async function handleGroup(name, commentIds) {
+    const group = await createGroup(name, commentIds).catch(() => null);
+    if (!group) { refresh(); return; }
+    setGroups((prev) => [...prev, group]);
+    setComments((prev) => prev.map((c) => (commentIds.includes(c.id) ? { ...c, groupId: group.id } : c)));
+  }
+  async function handleMoveToGroup(comment, groupId) {
+    setComments((prev) => prev.map((c) => (c.id === comment.id ? { ...c, groupId } : c)));
+    await setCommentGroup(comment.id, groupId).catch(() => refresh());
+  }
+  async function handleRenameGroup(id, name) {
+    setGroups((prev) => prev.map((g) => (g.id === id ? { ...g, name } : g)));
+    await renameGroup(id, name).catch(() => refresh());
+  }
+  async function handleUngroup(id) {
+    setGroups((prev) => prev.filter((g) => g.id !== id));
+    setComments((prev) => prev.map((c) => (c.groupId === id ? { ...c, groupId: null } : c)));
+    await deleteGroup(id).catch(() => refresh());
+  }
+
   async function handleReply(a, body) {
     const saved = await replyToAnnotation(a.id, body).catch(() => null);
     if (saved) mergeComment(saved);
@@ -328,7 +358,7 @@ export default function JynxGate() {
       </button>
     ),
     draw: (
-      <button type="button" className={'dev-toolbar-icon-btn' + (drawMode ? ' active' : '')} data-devblock="jynx-toolbar-draw-toggle" onClick={() => setDrawMode((v) => !v)} title={drawMode ? 'Turn off drawing' : `Turn on drawing — hold ${MODIFIERS[hotkey].symbol} and drag on the page`}>
+      <button type="button" className={'dev-toolbar-icon-btn' + (drawMode ? ' active' : '')} data-devblock="jynx-toolbar-draw-toggle" onClick={() => setDrawMode((v) => !v)} title={drawMode ? 'Turn off drawing' : `Turn on drawing — hold ${hotkeySymbol(hotkey)} and drag on the page`}>
         <Pencil size={13} />
       </button>
     ),
@@ -360,9 +390,10 @@ export default function JynxGate() {
       {commentsOn && (
         <CommentsPanel
           comments={comments}
+          groups={groups}
           route={route}
           routeLabel={SCREEN_LABELS[state.activeScreenId] || state.activeScreenId}
-          hotkeySymbol={MODIFIERS[hotkey].symbol}
+          hotkeySymbol={hotkeySymbol(hotkey)}
           currentUser={user}
           onNavigate={goToCommentRoute}
           onClose={() => setCommentsOn(false)}
@@ -370,6 +401,10 @@ export default function JynxGate() {
           onDelete={handleDelete}
           onEdit={handleEdit}
           onReply={handleReply}
+          onGroup={handleGroup}
+          onMoveToGroup={handleMoveToGroup}
+          onRenameGroup={handleRenameGroup}
+          onUngroup={handleUngroup}
         />
       )}
 
@@ -381,7 +416,7 @@ export default function JynxGate() {
           className="jynx-draw-palette jynx-chrome jynx-ui"
           style={{ right: drawPaletteFab.pos.right, bottom: drawPaletteFab.pos.bottom }}
           {...drawPaletteFab.dragHandlers}
-          title={`Hold ${MODIFIERS[hotkey].symbol} and drag on the page to draw · release and drag again to add another stroke · Esc to finish and comment`}
+          title={`Hold ${hotkeySymbol(hotkey)} and drag on the page to draw · release and drag again to add another stroke · Esc to finish and comment`}
         >
           {JYNX_DRAW_COLORS.map((c) => (
             <button
@@ -416,7 +451,7 @@ export default function JynxGate() {
                 </div>
               )
             ))}
-            <GreetingMenu user={user} shortcuts={shortcuts} hotkeySymbol={MODIFIERS[hotkey].symbol} onLogout={logout} />
+            <GreetingMenu user={user} shortcuts={shortcuts} hotkeySymbol={hotkeySymbol(hotkey)} onLogout={logout} />
             <button type="button" className="dev-toolbar-icon-btn" data-devblock="jynx-toolbar-collapse-btn" onClick={() => setToolbarOpen(false)} title="Collapse to the Jynx bubble">
               <X size={13} />
             </button>

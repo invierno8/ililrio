@@ -5,7 +5,7 @@ import AnnotationPopover from './AnnotationPopover.jsx';
 import AnnotationMarkers from './AnnotationMarkers.jsx';
 import DrawingCanvas from './DrawingCanvas.jsx';
 import DrawingOverlay from './DrawingOverlay.jsx';
-import { hasHotkey, useHotkeyHeld, MODIFIERS } from './hotkey.js';
+import { hasHotkey, useHotkeyHeld, hotkeySymbol } from './hotkey.js';
 import { sameScreen } from './route.js';
 
 /* ==================================================================
@@ -32,10 +32,10 @@ export default function DevOverlay({ hoverOn, markersOn, drawMode, drawColor, ro
   // ההילה מופיעה רק כל עוד המקש מוחזק: מחזיקים, עוברים מעל, לוחצים ומעירים.
   // בלי זה כל תנועת עכבר על העמוד הייתה מציירת מסגרת, גם כשרק קוראים אותו.
   // העין נשארת המתג העליון — כבויה, אין הילה גם כשמחזיקים.
-  const hotkeyHeld = useHotkeyHeld(hotkey);
+  const [hotkeyHeld, hotkeyHeldRef] = useHotkeyHeld(hotkey);
   // Shift מרחיב מהטקסט אל המכל שמסביבו. אם המשתמש בחר דווקא ב-Shift כמקש
   // הקיצור, אין הרחבה — אחרת אי אפשר היה להעיר על טקסט בכלל.
-  const shiftHeld = useHotkeyHeld('shift');
+  const [shiftHeld] = useHotkeyHeld('shift');
   const preferBlock = hotkey !== 'shift' && shiftHeld;
   const target = useHoverTarget(hoverOn && hotkeyHeld, true, preferBlock);
   const [popover, setPopover] = useState(null); // { x, y, label, path, secondaryTargets: [] } | null
@@ -66,7 +66,7 @@ export default function DevOverlay({ hoverOn, markersOn, drawMode, drawColor, ro
       if (drawMode && !popover) return;
 
       if (popover) {
-        if (!hasHotkey(e, hotkey)) return;
+        if (!hasHotkey(e, hotkey, hotkeyHeldRef.current)) return;
         if (!el) return;
         e.preventDefault();
         e.stopPropagation();
@@ -79,7 +79,7 @@ export default function DevOverlay({ hoverOn, markersOn, drawMode, drawColor, ro
         return;
       }
 
-      if (!hasHotkey(e, hotkey)) return;
+      if (!hasHotkey(e, hotkey, hotkeyHeldRef.current)) return;
       if (!el) return;
       e.preventDefault();
       e.stopPropagation();
@@ -161,14 +161,14 @@ export default function DevOverlay({ hoverOn, markersOn, drawMode, drawColor, ro
           y={popover.y}
           label={popover.label}
           secondaryTargets={popover.secondaryTargets}
-          hotkeySymbol={(MODIFIERS[hotkey] || MODIFIERS.ctrl).symbol}
+          hotkeySymbol={hotkeySymbol(hotkey)}
           kind={popover.kind}
           hasDrawing={!!popover.drawing}
           onCancel={() => setPopover(null)}
           onSubmit={submit}
         />
       )}
-      <DrawingCanvas active={drawMode && !popover} hotkey={hotkey} color={drawColor} onComplete={handleDrawingComplete} />
+      <DrawingCanvas active={drawMode && !popover} hotkey={hotkey} heldRef={hotkeyHeldRef} color={drawColor} onComplete={handleDrawingComplete} />
       <AnnotationMarkers
         active={markersOn}
         comments={comments.filter((c) => sameScreen(c.route, route))}

@@ -30,6 +30,7 @@ npm run dev
 | שם | חובה | מה זה |
 | --- | --- | --- |
 | `GITHUB_TOKEN` | כן | טוקן עם הרשאת כתיבה ל-`contents` של הרפו הזה בלבד |
+| `JYNX_DATA_DIR` | לא | לפיתוח מקומי בלבד, כשאין טוקן: תיקייה שממנה נקראים ואליה נכתבים אותם קבצי JSON, במקום GitHub |
 | `GITHUB_REPO` | כן | `invierno8/ililrio` |
 | `GITHUB_BRANCH` | לא | ברירת מחדל `main` |
 | `JYNX_SESSION_SECRET` | כן | מחרוזת אקראית לחתימת הסשנים |

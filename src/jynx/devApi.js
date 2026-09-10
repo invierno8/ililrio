@@ -68,8 +68,10 @@ export async function fetchMe() {
   }
 }
 
-export async function fetchComments() {
-  return (await call('/api/jynx/comments')).comments || [];
+/** מחזיר גם את ההערות וגם את הקבוצות — הן חיות באותו מסמך. */
+export async function fetchThread() {
+  const out = await call('/api/jynx/comments');
+  return { comments: out.comments || [], groups: out.groups || [] };
 }
 
 export async function submitAnnotation({ route, routePersona, routeItemId, targetLabel, targetPath, targetKind, comment, secondaryTargets, drawing }) {
@@ -81,6 +83,22 @@ export async function submitAnnotation({ route, routePersona, routeItemId, targe
 
 export async function editAnnotation(id, comment) {
   return (await call(`/api/jynx/comments/${id}`, { method: 'PATCH', body: JSON.stringify({ comment }) })).comment;
+}
+
+export async function setCommentGroup(id, groupId) {
+  return (await call(`/api/jynx/comments/${id}`, { method: 'PATCH', body: JSON.stringify({ groupId }) })).comment;
+}
+
+export async function createGroup(name, commentIds) {
+  return (await call('/api/jynx/groups', { method: 'POST', body: JSON.stringify({ name, commentIds }) })).group;
+}
+
+export async function renameGroup(id, name) {
+  return (await call(`/api/jynx/groups/${id}`, { method: 'PATCH', body: JSON.stringify({ name }) })).group;
+}
+
+export async function deleteGroup(id) {
+  await call(`/api/jynx/groups/${id}`, { method: 'DELETE' });
 }
 
 export async function resolveAnnotation(id, resolved) {

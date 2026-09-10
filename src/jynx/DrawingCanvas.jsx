@@ -32,7 +32,7 @@ function strokeFromPoints(points) {
   return { points, type };
 }
 
-export default function DrawingCanvas({ active, hotkey, onComplete, color = 'var(--jynx)' }) {
+export default function DrawingCanvas({ active, hotkey, heldRef, onComplete, color = 'var(--jynx)' }) {
   const [strokes, setStrokes] = useState([]);
   const [livePoints, setLivePoints] = useState([]);
   const strokesRef = useRef([]);
@@ -71,7 +71,7 @@ export default function DrawingCanvas({ active, hotkey, onComplete, color = 'var
     }
 
     function onPointerDown(e) {
-      if (!hasHotkey(e, hotkeyRef.current)) return;
+      if (!hasHotkey(e, hotkeyRef.current, heldRef?.current)) return;
       if (e.target.closest?.('.dev-overlay-ignore, .jynx-chrome')) return;
       e.preventDefault();
       e.stopPropagation();
