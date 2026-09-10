@@ -14,7 +14,7 @@ import DrawingOverlay from './DrawingOverlay.jsx';
    theme.css) במקום לכסות אותו, כך ששום דבר באתר לא מוסתר בזמן שהיא פתוחה.
    ================================================================== */
 
-export default function CommentsPanel({ comments, route, currentUser, hotkeySymbol = 'Ctrl', onClose, onResolve, onDelete, onEdit, onReply }) {
+export default function CommentsPanel({ comments, route, currentUser, hotkeySymbol = 'Ctrl', onNavigate, onClose, onResolve, onDelete, onEdit, onReply }) {
   const [statusFilter, setStatusFilter] = useState('open');
   const [scope, setScope] = useState('page');
   const [mineOnly, setMineOnly] = useState(false);
@@ -50,16 +50,42 @@ export default function CommentsPanel({ comments, route, currentUser, hotkeySymb
     return el && document.contains(el) ? el.getBoundingClientRect() : null;
   };
 
-  const jumpTo = (a) => {
-    const el = elementForComment(a);
-    if (!el || !document.contains(el)) return;
-    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  /**
+   * לוקח את המשתמש אל האלמנט שההערה נכתבה עליו — גם כשהוא במסך אחר: קודם
+   * עוברים למסך (ולפרסונה) של ההערה, ואז ממתינים שהאלמנט יופיע. המעבר אינו
+   * מיידי, כי המסך נטען עם שלד קצר, ולכן מנסים שוב כל 120ms במקום לגלול אל
+   * מה שעדיין לא קיים ולהיכשל בשקט.
+   */
+  const flash = (a) => {
     setFlashId(a.id);
     setTimeout(() => setFlashId((f) => (f === a.id ? null : f)), 1600);
   };
 
-  const hoveredRect = hoveredId ? rectFor(shown.find((a) => a.id === hoveredId)) : null;
-  const flashRect = flashId ? rectFor(shown.find((a) => a.id === flashId)) : null;
+  const jumpTo = (a) => {
+    const here = elementForComment(a);
+    if (here && document.contains(here) && a.route === route) {
+      here.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      flash(a);
+      return;
+    }
+    if (onNavigate) onNavigate(a);
+    let attempts = 24;
+    const tick = () => {
+      const el = elementForComment(a);
+      if (el && document.contains(el)) {
+        el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        flash(a);
+        return;
+      }
+      attempts -= 1;
+      if (attempts > 0) setTimeout(tick, 120);
+    };
+    setTimeout(tick, 160);
+  };
+
+  const byId = (id) => comments.find((a) => a.id === id);
+  const hoveredRect = hoveredId ? rectFor(byId(hoveredId)) : null;
+  const flashRect = flashId ? rectFor(byId(flashId)) : null;
 
   return createPortal(
     <>
@@ -127,13 +153,13 @@ export default function CommentsPanel({ comments, route, currentUser, hotkeySymb
               <div key={a.id} className="comments-sidebar-item-wrap">
                 <div
                   className={'comments-sidebar-item' + (otherPage ? ' comments-sidebar-item-other-page' : '')}
-                  onMouseEnter={() => !otherPage && setHoveredId(a.id)}
+                  onMouseEnter={() => setHoveredId(a.id)}
                   onMouseLeave={() => setHoveredId((h) => (h === a.id ? null : h))}
-                  onClick={() => !isEditing && !otherPage && jumpTo(a)}
+                  onClick={() => !isEditing && jumpTo(a)}
                 >
                   <span className="comments-sidebar-item-target">
                     {a.targetKind === 'text' && <span className="comments-kind-badge">text</span>}
-                    {otherPage && <span className="comments-route-badge">{a.route}</span>}
+                    {otherPage && <span className="comments-route-badge" title="On another screen — click to go there">{a.route}</span>}
                     {a.targetLabel}
                     {a.resolved && <span className="comments-done-badge"><CheckCircle2 size={10} /> Done</span>}
                   </span>

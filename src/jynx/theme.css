@@ -414,7 +414,9 @@ body.jynx-side-open { --jynx-side-offset: var(--jynx-side-width); }
   display: flex; flex-direction: column; gap: 5px; cursor: pointer; transition: border-color .12s ease;
 }
 .comments-sidebar-item:hover { border-color: var(--jynx); }
-.comments-sidebar-item-other-page { cursor: default; opacity: .8; }
+/* הערה ממסך אחר אינה מושבתת: לחיצה עליה לוקחת לשם. */
+.comments-sidebar-item-other-page { opacity: .82; }
+.comments-sidebar-item-other-page:hover { opacity: 1; }
 .comments-sidebar-item-target {
   display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
   font-family: var(--font-mono); font-size: 10px; color: var(--jynx); text-transform: uppercase; letter-spacing: .04em;

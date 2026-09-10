@@ -54,7 +54,8 @@ const SCREEN_LABELS = {
 };
 
 export default function JynxGate() {
-  const { state } = useRio();
+  // store נדרש כדי לקחת את המשתמש למסך שעליו נכתבה הערה.
+  const { state, store } = useRio();
   const isNarrow = useIsNarrow();
 
   const [checking, setChecking] = useState(true);
@@ -83,13 +84,34 @@ export default function JynxGate() {
   // ההעדפה נשמרת לפי המשתמש, לא לפי הדפדפן — מי שמחליף מקש משנה רק לעצמו.
   const [hotkey, setHotkey] = useHotkeyModifier(user?.id);
 
-  const lockedFab = useDraggableFab('jynx-locked-fab-pos');
-  const drawPaletteFab = useDraggableFab('jynx-draw-palette-pos', { right: 20, bottom: 130 });
-  const toolbarFab = useDraggableFab('jynx-toolbar-pos');
+  // ברירת המחדל מוזחת שמאלה מהפינה: תפריט הצד של RIO תופס 176px בימין, ובדיוק
+  // שם יושבים מחליף הפרסונות וכרטיס המשתמש — בועה בפינה הייתה מכסה אותם.
+  // מרגע שגוררים, המיקום הנשמר הוא שקובע.
+  const DEFAULT_FAB_POS = { right: 200, bottom: 20 };
+  const lockedFab = useDraggableFab('jynx-locked-fab-pos', DEFAULT_FAB_POS);
+  const drawPaletteFab = useDraggableFab('jynx-draw-palette-pos', { right: 200, bottom: 130 });
+  const toolbarFab = useDraggableFab('jynx-toolbar-pos', DEFAULT_FAB_POS);
   const loginPanelRef = useRef(null);
   useKeepInViewport(loginPanelRef, loginOpen, 8, [error]);
 
   const route = `${state.currentPersona}:${state.activeScreenId}`;
+  const routeItemId = state.activeScreenId === 'item-detail' ? state.selectedItemId : null;
+
+  /**
+   * לוקח את המשתמש למסך שעליו נכתבה הערה, גם אם הוא בפרסונה אחרת. אחרי
+   * המעבר המסך נטען מחדש (יש שלד קצר), ולכן מי שקורא לזה ממתין להופעת
+   * האלמנט לפני שהוא גולל אליו — ראו CommentsPanel.
+   */
+  const goToCommentRoute = useCallback((comment) => {
+    const [persona, screenId] = String(comment.route || '').split(':');
+    if (!screenId) return;
+    if (persona && persona !== state.currentPersona) store.switchPersona(persona);
+    if (screenId === 'item-detail' && comment.routeItemId != null) {
+      store.openItem(comment.routeItemId);
+    } else {
+      store.setState({ activeScreenId: screenId });
+    }
+  }, [state.currentPersona, store]);
 
   useEffect(() => { try { localStorage.setItem(OVERLAY_ON_KEY, String(overlayOn)); } catch { /* ignore */ } }, [overlayOn]);
   useEffect(() => { try { localStorage.setItem(MARKERS_ON_KEY, String(markersOn)); } catch { /* ignore */ } }, [markersOn]);
@@ -321,6 +343,7 @@ export default function JynxGate() {
         drawMode={drawMode}
         drawColor={drawColor}
         route={route}
+        routeItemId={routeItemId}
         comments={comments}
         currentUser={user}
         hotkey={hotkey}
@@ -336,6 +359,7 @@ export default function JynxGate() {
           routeLabel={SCREEN_LABELS[state.activeScreenId] || state.activeScreenId}
           hotkeySymbol={MODIFIERS[hotkey].symbol}
           currentUser={user}
+          onNavigate={goToCommentRoute}
           onClose={() => setCommentsOn(false)}
           onResolve={handleResolve}
           onDelete={handleDelete}

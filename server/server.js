@@ -115,7 +115,7 @@ app.get('/api/jynx/comments', requireUser, (req, res) => {
 });
 
 app.post('/api/jynx/comments', requireUser, async (req, res) => {
-  const { route, targetLabel, targetPath, targetKind, comment, secondaryTargets, drawing } = req.body || {};
+  const { route, routeItemId, targetLabel, targetPath, targetKind, comment, secondaryTargets, drawing } = req.body || {};
   if (!comment || !String(comment).trim()) return res.status(400).json({ error: 'Comment is empty' });
 
   const saved = {
@@ -124,6 +124,9 @@ app.post('/api/jynx/comments', requireUser, async (req, res) => {
     authorId: req.user.id,
     authorName: req.user.name,
     route: route || '',
+    // איזה פריט היה פתוח, כשההערה נכתבה במסך פריט — כדי שאפשר יהיה לחזור
+    // בדיוק לאותו פריט ולא לראשון ברשימה.
+    routeItemId: routeItemId == null ? null : routeItemId,
     targetLabel: targetLabel || '',
     targetPath: targetPath || '',
     targetKind: targetKind === 'text' ? 'text' : 'block',

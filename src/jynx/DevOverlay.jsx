@@ -27,7 +27,7 @@ function parseSecondaryTargetsFromComment(comment) {
   return found.slice(0, 10);
 }
 
-export default function DevOverlay({ hoverOn, markersOn, drawMode, drawColor, route, comments, currentUser, hotkey, onSubmit, onResolve, onDelete }) {
+export default function DevOverlay({ hoverOn, markersOn, drawMode, drawColor, route, routeItemId, comments, currentUser, hotkey, onSubmit, onResolve, onDelete }) {
   // ההילה מופיעה רק כל עוד המקש מוחזק: מחזיקים, עוברים מעל, לוחצים ומעירים.
   // בלי זה כל תנועת עכבר על העמוד הייתה מציירת מסגרת, גם כשרק קוראים אותו.
   // העין נשארת המתג העליון — כבויה, אין הילה גם כשמחזיקים.
@@ -120,6 +120,7 @@ export default function DevOverlay({ hoverOn, markersOn, drawMode, drawColor, ro
   async function submit(comment) {
     await onSubmit({
       route,
+      routeItemId,
       targetLabel: popover.label,
       targetPath: popover.path,
       targetKind: popover.kind,
