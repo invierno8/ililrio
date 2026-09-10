@@ -39,9 +39,14 @@ export function sectionsFor(comments, groups) {
     byGroup.get(id).push(c);
   }
 
-  const named = groups
-    .filter((g) => byGroup.has(g.id))
-    .map((g) => ({ id: g.id, name: g.name, createdBy: g.createdBy, items: byGroup.get(g.id), auto: false }));
+  // מזהה שחוזר פעמיים היה מצייר את אותה קבוצה פעמיים; שומרים על הראשון.
+  const named = [];
+  const seen = new Set();
+  for (const g of groups) {
+    if (!byGroup.has(g.id) || seen.has(g.id)) continue;
+    seen.add(g.id);
+    named.push({ id: g.id, name: g.name, createdBy: g.createdBy, items: byGroup.get(g.id), auto: false });
+  }
 
   const auto = byGroup.has(AUTO_JYNX_GROUP)
     ? [{ id: AUTO_JYNX_GROUP, name: AUTO_JYNX_NAME, items: byGroup.get(AUTO_JYNX_GROUP), auto: true }]

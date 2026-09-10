@@ -136,9 +136,20 @@ export default function JynxGate() {
     return () => { cancelled = true; };
   }, []);
 
+  /**
+   * חותמת השינוי המקומי האחרון. הפולינג של שש השניות ותשובת הכתיבה מתחרים
+   * זה בזה: משיכה שיצאה לדרך לפני שינוי מקומי חוזרת עם המצב שלפניו, ואם היא
+   * נוחתת אחריו היא מוחקת אותו מהמסך — וזה מה שיצר קבוצה כפולה מגרירה אחת.
+   * לכן תשובה כזו נזרקת; המשיכה הבאה ממילא תביא את המצב המלא.
+   */
+  const lastLocalWrite = useRef(0);
+  const markLocalWrite = () => { lastLocalWrite.current = Date.now(); };
+
   const refresh = useCallback(async () => {
+    const startedAt = Date.now();
     try {
       const thread = await fetchThread();
+      if (lastLocalWrite.current > startedAt) return;
       setComments(thread.comments);
       setGroups(thread.groups);
     } catch (e) {
@@ -230,43 +241,66 @@ export default function JynxGate() {
   ));
 
   async function handleSubmit(payload) {
+    markLocalWrite();
     mergeComment(await submitAnnotation(payload));
+    markLocalWrite();
   }
   async function handleResolve(a, resolved) {
+    markLocalWrite();
     setComments((prev) => prev.map((c) => (c.id === a.id ? { ...c, resolved } : c)));
     await resolveAnnotation(a.id, resolved).catch(() => refresh());
+    markLocalWrite();
   }
   async function handleDelete(a) {
+    markLocalWrite();
     setComments((prev) => prev.filter((c) => c.id !== a.id));
     await deleteAnnotation(a.id).catch(() => refresh());
+    markLocalWrite();
   }
   async function handleEdit(a, comment) {
+    markLocalWrite();
     setComments((prev) => prev.map((c) => (c.id === a.id ? { ...c, comment } : c)));
     await editAnnotation(a.id, comment).catch(() => refresh());
+    markLocalWrite();
   }
   // קיבוץ: כל פעולה מעדכנת מיד על המסך, ואז מסתנכרנת מהשירות.
+  /** מיזוג לפי מזהה, כמו בהערות — אף פעם לא דחיפה עיוורת לסוף. */
+  const mergeGroup = (saved) => setGroups((prev) => (
+    prev.some((g) => g.id === saved.id) ? prev.map((g) => (g.id === saved.id ? saved : g)) : [...prev, saved]
+  ));
+
   async function handleGroup(name, commentIds) {
+    markLocalWrite();
     const group = await createGroup(name, commentIds).catch(() => null);
+    markLocalWrite();
     if (!group) { refresh(); return; }
-    setGroups((prev) => [...prev, group]);
+    mergeGroup(group);
     setComments((prev) => prev.map((c) => (commentIds.includes(c.id) ? { ...c, groupId: group.id } : c)));
   }
   async function handleMoveToGroup(comment, groupId) {
+    markLocalWrite();
     setComments((prev) => prev.map((c) => (c.id === comment.id ? { ...c, groupId } : c)));
     await setCommentGroup(comment.id, groupId).catch(() => refresh());
+    markLocalWrite();
   }
   async function handleRenameGroup(id, name) {
+    markLocalWrite();
     setGroups((prev) => prev.map((g) => (g.id === id ? { ...g, name } : g)));
     await renameGroup(id, name).catch(() => refresh());
+    markLocalWrite();
   }
   async function handleUngroup(id) {
+    markLocalWrite();
     setGroups((prev) => prev.filter((g) => g.id !== id));
     setComments((prev) => prev.map((c) => (c.groupId === id ? { ...c, groupId: null } : c)));
     await deleteGroup(id).catch(() => refresh());
+    markLocalWrite();
   }
 
   async function handleReply(a, body) {
+    markLocalWrite();
     const saved = await replyToAnnotation(a.id, body).catch(() => null);
+    markLocalWrite();
     if (saved) mergeComment(saved);
     else refresh();
   }
