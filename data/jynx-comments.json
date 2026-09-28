@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-28T00:44:44.831Z",
+  "updatedAt": "2026-09-28T00:44:56.644Z",
   "groups": [
     {
       "id": "g-7159dd4c",
@@ -263,6 +263,24 @@
       "secondaryTargets": [],
       "drawing": null,
       "comment": "אחלה שיש נקה הכל! אבל זיהיה גם ברשימה עצמה אופציה",
+      "groupId": null,
+      "resolved": false,
+      "replies": []
+    },
+    {
+      "id": "c-8a042e9e",
+      "createdAt": "2026-09-28T00:44:56.644Z",
+      "authorId": "u-682f158037",
+      "authorName": "rio",
+      "route": "catalog",
+      "routePersona": "P1",
+      "routeItemId": null,
+      "targetLabel": "תמונה",
+      "targetPath": "0/1/1/0/1/1/0",
+      "targetKind": "text",
+      "secondaryTargets": [],
+      "drawing": null,
+      "comment": "asdas'\\",
       "groupId": null,
       "resolved": false,
       "replies": []
