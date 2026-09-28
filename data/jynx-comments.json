@@ -1,11 +1,17 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-28T00:44:41.454Z",
+  "updatedAt": "2026-09-28T00:44:42.092Z",
   "groups": [
     {
       "id": "g-7159dd4c",
       "name": "New group",
       "createdAt": "2026-09-28T00:44:41.454Z",
+      "createdBy": "rio"
+    },
+    {
+      "id": "g-4b130a37",
+      "name": "New group",
+      "createdAt": "2026-09-28T00:44:42.092Z",
       "createdBy": "rio"
     }
   ],
@@ -66,7 +72,8 @@
       "drawing": null,
       "comment": "אישור של מה? מה אני מאשר במצב הזה",
       "resolved": false,
-      "replies": []
+      "replies": [],
+      "groupId": "g-4b130a37"
     },
     {
       "id": "c-469e1cee",
@@ -81,7 +88,8 @@
       "drawing": null,
       "comment": "זה יהיה בסודי רק לא? בכל אופן רמת סיווג צריכה להיקבע אוטומטית לפי הפלטפורמה או רק מתחת למה שאני נמצא כרגע, אם אני בסודי אז מוגבל ושמור כאופציות ובסודי ביותר סודי מתווסף",
       "resolved": false,
-      "replies": []
+      "replies": [],
+      "groupId": "g-4b130a37"
     },
     {
       "id": "c-be3bee5d",
