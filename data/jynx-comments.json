@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-30T09:44:04.279Z",
+  "updatedAt": "2026-09-30T09:44:46.595Z",
   "groups": [
     {
       "id": "g-7159dd4c",
@@ -299,6 +299,26 @@
       "secondaryTargets": [],
       "drawing": null,
       "comment": ",gav navu",
+      "groupId": null,
+      "resolved": false,
+      "replies": []
+    },
+    {
+      "id": "c-9b1ac8d2",
+      "createdAt": "2026-09-30T09:44:46.595Z",
+      "authorId": "u-682f158037",
+      "authorName": "rio",
+      "route": "catalog",
+      "routePersona": "P1",
+      "routeItemId": null,
+      "targetLabel": "תמונה",
+      "targetPath": "0/1/1/0/1/10/0",
+      "targetKind": "text",
+      "secondaryTargets": [
+        "המעקבים שלי"
+      ],
+      "drawing": null,
+      "comment": "תעשה כמו [→ המעקבים שלי]",
       "groupId": null,
       "resolved": false,
       "replies": []
